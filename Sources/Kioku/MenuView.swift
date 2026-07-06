@@ -9,33 +9,47 @@ struct MenuView: View {
         if permission.isTrusted {
             Toggle("選択検知を有効にする", isOn: $coordinator.isMonitoringEnabled)
             Divider()
-            Button("選択テキストをテスト取得") {
+            Button {
                 showProbeResult()
+            } label: {
+                Label("選択テキストをテスト取得", systemImage: "text.magnifyingglass")
             }
         } else {
             Text("アクセシビリティ権限が必要です")
-            Button("権限をリクエスト…") {
+            Button {
                 permission.prompt()
+            } label: {
+                Label("権限をリクエスト…", systemImage: "lock.shield")
             }
-            Button("システム設定を開く…") {
+            Button {
                 permission.openSystemSettings()
+            } label: {
+                Label("システム設定を開く…", systemImage: "gearshape.arrow.trianglehead.2.clockwise.rotate.90")
             }
         }
         Divider()
-        Button("復習する…") {
+        Button {
             coordinator.openReview()
+        } label: {
+            Label("復習する…", systemImage: "square.stack")
         }
         .keyboardShortcut("s")
-        Button("翻訳履歴…") {
+        Button {
             coordinator.openHistory()
+        } label: {
+            Label("翻訳履歴…", systemImage: "clock")
         }
         .keyboardShortcut("h")
-        Button("週次レポート…") {
+        Button {
             coordinator.openReport()
+        } label: {
+            Label("週次レポート…", systemImage: "chart.line.uptrend.xyaxis")
         }
         .keyboardShortcut("r")
-        Button("設定…") {
+        Button {
             coordinator.openSettings()
+        } label: {
+            Label("設定…", systemImage: "gearshape")
         }
         .keyboardShortcut(",")
         Divider()

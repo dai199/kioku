@@ -19,15 +19,18 @@ final class PopupController {
         currentSession?.cancel()
         currentSession = session
 
+        let placement = placement(for: session.event)
         panel.setFrame(
             NSRect(
-                origin: origin(for: session.event),
+                origin: placement.origin,
                 size: NSSize(width: panelWidth, height: estimatedHeight)
             ),
             display: false
         )
         panel.contentView = NSHostingView(rootView: PopupView(
             session: session,
+            showArrow: placement.showArrow,
+            arrowMidX: placement.arrowMidX,
             onOpenSettings: onOpenSettings,
             onClose: { [weak self] in self?.hide() },
             onSizeChange: { [weak self] size in self?.resizeKeepingTop(to: size) }
@@ -74,11 +77,13 @@ final class PopupController {
         panel.setFrame(newFrame, display: true)
     }
 
-    /// 選択範囲の直下（入らなければ上、位置不明ならマウス位置基準）に出す。
-    private func origin(for event: SelectionEvent) -> NSPoint {
-        let anchor = event.selectionBounds.map { NSPoint(x: $0.minX, y: $0.minY) }
+    /// 選択範囲の中央直下に、矢印が選択を指す形で出す。
+    /// 下に入らなければ選択の上に反転（その場合は矢印なし）。
+    private func placement(for event: SelectionEvent) -> (origin: NSPoint, showArrow: Bool, arrowMidX: CGFloat) {
+        let anchor = event.selectionBounds.map { NSPoint(x: $0.midX, y: $0.minY) }
             ?? event.mouseLocation
-        var origin = NSPoint(x: anchor.x, y: anchor.y - estimatedHeight - 8)
+        var origin = NSPoint(x: anchor.x - panelWidth / 2, y: anchor.y - estimatedHeight - 2)
+        var showArrow = true
 
         let screen = NSScreen.screens.first { NSMouseInRect(anchor, $0.frame, false) } ?? NSScreen.main
         if let frame = screen?.visibleFrame {
@@ -86,9 +91,11 @@ final class PopupController {
             if origin.y < frame.minY + 8 {
                 let top = event.selectionBounds?.maxY ?? anchor.y
                 origin.y = top + 8
+                showArrow = false
             }
         }
-        return origin
+        let arrowMidX = min(max(anchor.x - origin.x, 24), panelWidth - 24)
+        return (origin, showArrow, arrowMidX)
     }
 
     private func makePanel() -> NSPanel {
@@ -113,11 +120,14 @@ final class PopupController {
 
 struct PopupView: View {
     @ObservedObject var session: TranslationSession
+    let showArrow: Bool
+    let arrowMidX: CGFloat
     let onOpenSettings: () -> Void
     let onClose: () -> Void
     let onSizeChange: (CGSize) -> Void
 
     @State private var isOriginalExpanded = false
+    @State private var hasAppeared = false
 
     /// 手動でテキストを切り詰める。lineLimitによるシステム省略だと
     /// 「…をクリックすると全文がオーバーレイ表示され下の内容にかぶる」
@@ -143,15 +153,53 @@ struct PopupView: View {
             translationSection
         }
         .padding(12)
+        .padding(.top, showArrow ? 8 : 0)
         .frame(width: 360)
         // 提案サイズに関わらず内容の自然な高さを取り、その実寸をパネルへ通知する
         .fixedSize(horizontal: false, vertical: true)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.separator, lineWidth: 0.5))
+        .background(.regularMaterial, in: bubble)
+        .overlay(bubble.stroke(.separator, lineWidth: 0.5))
+        // 出現モーション: フェード（パネル側）＋わずかなスケール（DESIGN.md）
+        .scaleEffect(hasAppeared ? 1 : 0.97, anchor: .top)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.18)) {
+                hasAppeared = true
+            }
+        }
         .onGeometryChange(for: CGSize.self) { proxy in
             proxy.size
         } action: { size in
             onSizeChange(size)
+        }
+    }
+
+    private var bubble: BubbleShape {
+        BubbleShape(arrowMidX: showArrow ? arrowMidX : nil)
+    }
+
+    /// 吹き出し形状。上辺の矢印が選択範囲を指す（arrowMidX=nilで矢印なし）。
+    private struct BubbleShape: Shape {
+        var arrowMidX: CGFloat?
+        var arrowHeight: CGFloat = 8
+        var arrowWidth: CGFloat = 16
+        var cornerRadius: CGFloat = 14
+
+        func path(in rect: CGRect) -> Path {
+            guard let arrowMidX else {
+                return Path(roundedRect: rect, cornerRadius: cornerRadius)
+            }
+            let body = CGRect(
+                x: rect.minX,
+                y: rect.minY + arrowHeight,
+                width: rect.width,
+                height: rect.height - arrowHeight
+            )
+            var path = Path(roundedRect: body, cornerRadius: cornerRadius)
+            path.move(to: CGPoint(x: arrowMidX - arrowWidth / 2, y: body.minY))
+            path.addLine(to: CGPoint(x: arrowMidX, y: rect.minY))
+            path.addLine(to: CGPoint(x: arrowMidX + arrowWidth / 2, y: body.minY))
+            path.closeSubpath()
+            return path
         }
     }
 
