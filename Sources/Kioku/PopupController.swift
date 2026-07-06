@@ -83,51 +83,56 @@ struct PopupView: View {
     let onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             header
             originalSection
             Divider()
             translationSection
             Spacer(minLength: 0)
         }
-        .padding(12)
+        .padding(14)
         .frame(width: 380, height: 240, alignment: .topLeading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.separator, lineWidth: 0.5))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.separator, lineWidth: 0.5))
     }
 
+    // メタ情報の階層: 最も控えめに（caption2 / tertiary）
     private var header: some View {
         HStack(spacing: 6) {
             Text(session.event.appName ?? "選択テキスト")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
             Text(session.sourceLanguage == "ja" ? "日 → 英" : "英 → 日")
                 .font(.caption2.weight(.medium))
-                .padding(.horizontal, 5)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 6)
                 .padding(.vertical, 1)
                 .background(.quaternary, in: Capsule())
             Spacer()
             Button(action: onClose) {
                 Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.tertiary)
             }
             .buttonStyle(.plain)
         }
     }
 
+    // 原文は文脈情報: 控えめに（footnote / secondary）
     private var originalSection: some View {
         HStack(alignment: .top, spacing: 6) {
             ScrollView {
                 Text(session.event.text)
-                    .font(.callout)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxHeight: 64)
+            .frame(maxHeight: 48)
             Button {
                 SpeechSpeaker.shared.speak(session.event.text, languageCode: session.sourceLanguage)
             } label: {
                 Image(systemName: "speaker.wave.2.fill")
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
@@ -150,8 +155,9 @@ struct PopupView: View {
         case .streaming(let partial):
             VStack(alignment: .leading, spacing: 6) {
                 ScrollView {
+                    // 訳文はこのポップアップの主役: title3で最も大きく
                     Text(partial)
-                        .font(.body)
+                        .font(.title3)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 HStack(spacing: 6) {
@@ -166,8 +172,9 @@ struct PopupView: View {
         case .done(let translation):
             VStack(alignment: .leading, spacing: 6) {
                 ScrollView {
+                    // 訳文はこのポップアップの主役: title3で最も大きく
                     Text(translation)
-                        .font(.body)
+                        .font(.title3)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }

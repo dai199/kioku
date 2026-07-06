@@ -72,7 +72,7 @@ private struct FloatingIconView: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "character.book.closed.fill")
+            Image(systemName: "translate")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.tint)
                 .frame(width: 26, height: 26)

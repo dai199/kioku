@@ -20,8 +20,12 @@ private struct MenuBarIcon: View {
     @EnvironmentObject private var permission: AccessibilityPermission
 
     var body: some View {
+        // メニューバーはモノクロのテンプレート画像が正（HIG: The menu bar）。
+        // テンプレート指定によりライト/ダーク・選択状態の色反転はOSが面倒を見る
         Image(systemName: permission.isTrusted
-            ? "character.book.closed.fill"
+            ? "translate"
             : "exclamationmark.triangle.fill")
+            .renderingMode(.template)
+            .accessibilityLabel("Kioku")
     }
 }
