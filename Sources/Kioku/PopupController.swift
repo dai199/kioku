@@ -4,9 +4,11 @@ import SwiftUI
 /// 翻訳結果を表示するポップアップパネル。
 /// 前面アプリのフォーカスを奪わないよう nonactivating で表示する
 /// （日→英の本文置換で選択状態を維持する必要があるため）。
+/// 高さは内容にフィットさせ、上端を固定したまま下方向に伸縮する（HIG: パネルは必要最小限に）。
 @MainActor
 final class PopupController {
-    private let size = NSSize(width: 380, height: 240)
+    private let panelWidth: CGFloat = 360
+    private let estimatedHeight: CGFloat = 150
     private lazy var panel: NSPanel = makePanel()
     private var currentSession: TranslationSession?
 
@@ -16,12 +18,20 @@ final class PopupController {
         currentSession?.finalize()
         currentSession?.cancel()
         currentSession = session
+
+        panel.setFrame(
+            NSRect(
+                origin: origin(for: session.event),
+                size: NSSize(width: panelWidth, height: estimatedHeight)
+            ),
+            display: false
+        )
         panel.contentView = NSHostingView(rootView: PopupView(
             session: session,
             onOpenSettings: onOpenSettings,
-            onClose: { [weak self] in self?.hide() }
+            onClose: { [weak self] in self?.hide() },
+            onSizeChange: { [weak self] size in self?.resizeKeepingTop(to: size) }
         ))
-        panel.setFrameOrigin(origin(for: session.event))
         if !panel.isVisible {
             panel.alphaValue = 0
         }
@@ -40,15 +50,39 @@ final class PopupController {
         panel.orderOut(nil)
     }
 
+    /// 内容サイズの変化に合わせ、上端を固定したままパネルを伸縮する。
+    /// 画面からはみ出す場合は見える位置までずらす（下端優先で全体が見えることを保証）。
+    private func resizeKeepingTop(to size: CGSize) {
+        let frame = panel.frame
+        guard abs(frame.height - size.height) > 0.5 || abs(frame.width - size.width) > 0.5 else {
+            return
+        }
+        var newFrame = NSRect(
+            x: frame.minX,
+            y: frame.maxY - size.height,
+            width: size.width,
+            height: size.height
+        )
+        if let visible = (panel.screen ?? NSScreen.main)?.visibleFrame {
+            if newFrame.maxY > visible.maxY - 8 {
+                newFrame.origin.y = visible.maxY - 8 - newFrame.height
+            }
+            if newFrame.minY < visible.minY + 8 {
+                newFrame.origin.y = visible.minY + 8
+            }
+        }
+        panel.setFrame(newFrame, display: true)
+    }
+
     /// 選択範囲の直下（入らなければ上、位置不明ならマウス位置基準）に出す。
     private func origin(for event: SelectionEvent) -> NSPoint {
         let anchor = event.selectionBounds.map { NSPoint(x: $0.minX, y: $0.minY) }
             ?? event.mouseLocation
-        var origin = NSPoint(x: anchor.x, y: anchor.y - size.height - 8)
+        var origin = NSPoint(x: anchor.x, y: anchor.y - estimatedHeight - 8)
 
         let screen = NSScreen.screens.first { NSMouseInRect(anchor, $0.frame, false) } ?? NSScreen.main
         if let frame = screen?.visibleFrame {
-            origin.x = min(max(origin.x, frame.minX + 8), frame.maxX - size.width - 8)
+            origin.x = min(max(origin.x, frame.minX + 8), frame.maxX - panelWidth - 8)
             if origin.y < frame.minY + 8 {
                 let top = event.selectionBounds?.maxY ?? anchor.y
                 origin.y = top + 8
@@ -59,7 +93,7 @@ final class PopupController {
 
     private func makePanel() -> NSPanel {
         let panel = NSPanel(
-            contentRect: NSRect(origin: .zero, size: size),
+            contentRect: NSRect(x: 0, y: 0, width: panelWidth, height: estimatedHeight),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -81,19 +115,44 @@ struct PopupView: View {
     @ObservedObject var session: TranslationSession
     let onOpenSettings: () -> Void
     let onClose: () -> Void
+    let onSizeChange: (CGSize) -> Void
+
+    @State private var isOriginalExpanded = false
+
+    /// 手動でテキストを切り詰める。lineLimitによるシステム省略だと
+    /// 「…をクリックすると全文がオーバーレイ表示され下の内容にかぶる」
+    /// macOS標準動作が発動してしまうため、省略はこちらで制御する。
+    private static func clip(_ text: String, maxLines: Int, maxChars: Int) -> (text: String, isClipped: Bool) {
+        var clipped = text
+        let lines = text.components(separatedBy: "\n")
+        if lines.count > maxLines {
+            clipped = lines.prefix(maxLines).joined(separator: "\n")
+        }
+        if clipped.count > maxChars {
+            clipped = String(clipped.prefix(maxChars))
+        }
+        guard clipped != text else { return (text, false) }
+        return (clipped + "…", true)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             header
             originalSection
             Divider()
             translationSection
-            Spacer(minLength: 0)
         }
-        .padding(14)
-        .frame(width: 380, height: 240, alignment: .topLeading)
+        .padding(12)
+        .frame(width: 360)
+        // 提案サイズに関わらず内容の自然な高さを取り、その実寸をパネルへ通知する
+        .fixedSize(horizontal: false, vertical: true)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.separator, lineWidth: 0.5))
+        .onGeometryChange(for: CGSize.self) { proxy in
+            proxy.size
+        } action: { size in
+            onSizeChange(size)
+        }
     }
 
     // メタ情報の階層: 最も控えめに（caption2 / tertiary）
@@ -117,22 +176,48 @@ struct PopupView: View {
         }
     }
 
-    // 原文は文脈情報: 控えめに（footnote / secondary）
+    // 原文: 訳文（title3）よりは小さいが、何を翻訳したかが読み取れる大きさに。
+    // 長文は手動で切り詰め、シェブロンで展開（ポップアップごと下に伸びる）。
     private var originalSection: some View {
-        HStack(alignment: .top, spacing: 6) {
-            ScrollView {
+        let collapsed = Self.clip(session.event.text, maxLines: 4, maxChars: 140)
+        let expanded = Self.clip(session.event.text, maxLines: 24, maxChars: 1200)
+        return HStack(alignment: .top, spacing: 6) {
+            if collapsed.isClipped {
+                // 省略時は本文クリックで展開/たたむをトグル。
+                // onTapGestureはnonactivatingパネルでは最初のクリックが
+                // 届かないことがあるため、確実に動くButtonで包む
+                Button {
+                    isOriginalExpanded.toggle()
+                } label: {
+                    Text(isOriginalExpanded ? expanded.text : collapsed.text)
+                        .font(.callout)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(isOriginalExpanded ? "クリックでたたむ" : "クリックで全文表示")
+            } else {
                 Text(session.event.text)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(.callout)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxHeight: 48)
+            if collapsed.isClipped {
+                Button {
+                    isOriginalExpanded.toggle()
+                } label: {
+                    Image(systemName: isOriginalExpanded ? "chevron.up" : "chevron.down")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help(isOriginalExpanded ? "原文をたたむ" : "原文をすべて表示")
+            }
             Button {
                 SpeechSpeaker.shared.speak(session.event.text, languageCode: session.sourceLanguage)
             } label: {
                 Image(systemName: "speaker.wave.2.fill")
-                    .font(.footnote)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
@@ -150,16 +235,15 @@ struct PopupView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .center)
 
         case .streaming(let partial):
             VStack(alignment: .leading, spacing: 6) {
-                ScrollView {
-                    // 訳文はこのポップアップの主役: title3で最も大きく
-                    Text(partial)
-                        .font(.title3)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                // 訳文はこのポップアップの主役: title3で最も大きく
+                Text(Self.clip(partial, maxLines: 20, maxChars: 1000).text)
+                    .font(.title3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.mini)
                     Text("生成中…")
@@ -170,14 +254,12 @@ struct PopupView: View {
             }
 
         case .done(let translation):
-            VStack(alignment: .leading, spacing: 6) {
-                ScrollView {
-                    // 訳文はこのポップアップの主役: title3で最も大きく
-                    Text(translation)
-                        .font(.title3)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+            VStack(alignment: .leading, spacing: 8) {
+                // 訳文はこのポップアップの主役: title3で最も大きく
+                Text(Self.clip(translation, maxLines: 20, maxChars: 1000).text)
+                    .font(.title3)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 10) {
                     // 日→英ライティング支援: 選択中の日本語を採用した英文で置き換える
                     if session.sourceLanguage == "ja", TextReplacer.isReplaceable(session.event) {
