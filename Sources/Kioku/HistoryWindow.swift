@@ -85,7 +85,7 @@ struct HistoryView: View {
                 TextField("原文・訳文・アプリ名で検索", text: $model.searchText)
                     .textFieldStyle(.plain)
             }
-            .padding(10)
+            .padding(12)
             Divider()
 
             if model.filteredLogs.isEmpty {
@@ -124,6 +124,7 @@ private struct HistoryRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
+            // 文脈層: 原文・訳文とも callout（DESIGN.md）
             Text(log.sourceText)
                 .font(.callout)
                 .lineLimit(2)
@@ -131,26 +132,23 @@ private struct HistoryRow: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
+            // メタ層: caption2 / tertiary
             HStack(spacing: 6) {
-                Text(log.sourceLang == "ja" ? "日 → 英" : "英 → 日")
-                    .font(.caption2.weight(.medium))
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(.quaternary, in: Capsule())
+                DirectionBadge(sourceLang: log.sourceLang)
                 if let app = log.sourceApp {
                     Text(app)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
                 if let title = log.sourceTitle, !title.isEmpty {
                     Text(title)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
                 Spacer()
                 Text(log.createdAt, format: .relative(presentation: .named))
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
         }

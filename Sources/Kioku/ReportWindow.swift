@@ -127,8 +127,8 @@ struct ReportView: View {
         HStack {
             if let report = model.report {
                 Text("\(report.periodStart, format: .dateTime.month().day()) 〜 \(report.periodEnd, format: .dateTime.month().day()) ・ 生成: \(report.generatedAt, format: .relative(presentation: .named))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
             Spacer()
             if manager.isGenerating {
@@ -194,9 +194,7 @@ struct ReportView: View {
                                     }
                                 }
                             }
-                            .padding(10)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
+                            .cardBox()
                         }
                     }
                 }
@@ -249,13 +247,15 @@ private struct ProposedCardRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
+            // 覚える対象の英文が主役、日本語は文脈（DESIGN.md）
             Text(card.front)
                 .font(.callout)
+                .foregroundStyle(.secondary)
             Text(card.back)
                 .font(.callout.weight(.medium))
             if let reason = card.reason, !reason.isEmpty {
                 Text(reason)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
             HStack {
@@ -267,8 +267,6 @@ private struct ProposedCardRow: View {
                     .buttonStyle(.borderedProminent)
             }
         }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
+        .cardBox()
     }
 }

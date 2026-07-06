@@ -209,12 +209,7 @@ struct PopupView: View {
             Text(session.event.appName ?? "選択テキスト")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
-            Text(session.sourceLanguage == "ja" ? "日 → 英" : "英 → 日")
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 1)
-                .background(.quaternary, in: Capsule())
+            DirectionBadge(sourceLang: session.sourceLanguage)
             Spacer()
             Button(action: onClose) {
                 Image(systemName: "xmark.circle.fill")

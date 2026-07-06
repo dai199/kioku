@@ -148,8 +148,8 @@ struct ReviewView: View {
         VStack(spacing: 12) {
             HStack {
                 Text("\(model.doneCount) / \(model.totalCount)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
                     .monospacedDigit()
                 Spacer()
             }

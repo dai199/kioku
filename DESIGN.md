@@ -13,8 +13,16 @@
 | 層 | フォント | 色 | 用途 |
 |---|---|---|---|
 | 主役 | `.title3` | primary | 訳文、復習カードの英文 |
-| 文脈 | `.callout` | primary | 原文、履歴の本文 |
-| メタ | `.caption2` / `.caption` | `.secondary` / `.tertiary` | アプリ名、日時、バッジ、操作ヒント |
+| 文脈 | `.callout` | primary（従属側は `.secondary`） | 原文、履歴の本文、カード候補 |
+| メタ | `.caption2` | `.secondary` / `.tertiary` | アプリ名、日時、バッジ、操作ヒント |
+
+例外: **復習画面**は全画面フォーカスの学習の瞬間なので、答え（英文）に `.title2` まで許容する。
+
+## 共通コンポーネント（DesignComponents.swift）
+
+- `DirectionBadge(sourceLang:)` — 翻訳方向バッジ。方向表示は必ずこれを使う
+- `.cardBox()` — カード状ボックス（角丸8pt・quaternary背景・パディング10pt）。
+  レポートのパターン/カード候補などリスト内の塊はこれで統一する
 
 ## 余白・形状
 
