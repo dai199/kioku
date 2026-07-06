@@ -1,0 +1,32 @@
+name: Kioku
+options:
+  createIntermediateGroups: true
+  deploymentTarget:
+    macOS: "26.0"
+packages:
+  GRDB:
+    url: https://github.com/groue/GRDB.swift
+    from: "7.0.0"
+targets:
+  Kioku:
+    type: application
+    platform: macOS
+    sources:
+      - Sources/Kioku
+    dependencies:
+      - package: GRDB
+    info:
+      path: Sources/Kioku/Info.plist
+      properties:
+        CFBundleDisplayName: Kioku
+        # メニューバー常駐アプリ（Dockアイコン・アプリスイッチャーに出さない）
+        LSUIElement: true
+        NSHumanReadableCopyright: "© 2026 Daiki Tagami"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.daikitagami.kioku
+        DEVELOPMENT_TEAM: C8FHUZ27C7
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        # Accessibility APIを使うためApp Sandboxは無効（entitlementsなし）
+        ENABLE_HARDENED_RUNTIME: false
