@@ -19,7 +19,6 @@ enum SelectionProbe {
         let windowTitle: String?
         /// 出典: ドキュメントのURL/パス（公開しているアプリのみ）
         let documentURL: String?
-        let detail: String
     }
 
     static func readCurrentSelection() -> Probe {
@@ -41,8 +40,7 @@ enum SelectionProbe {
             return Probe(
                 text: nil, appName: appName, bundleID: bundleID, pid: pid,
                 element: nil, selectionBounds: nil,
-                windowTitle: window.title, documentURL: window.url,
-                detail: "フォーカス中のUI要素を取得できませんでした (AXError: \(focusedError.rawValue))"
+                windowTitle: window.title, documentURL: window.url
             )
         }
         let element = unsafeDowncast(focusedRef, to: AXUIElement.self)
@@ -55,16 +53,14 @@ enum SelectionProbe {
             return Probe(
                 text: nil, appName: appName, bundleID: bundleID, pid: pid,
                 element: element, selectionBounds: nil,
-                windowTitle: window.title, documentURL: window.url,
-                detail: "選択テキストがありません (AXError: \(selectedError.rawValue))"
+                windowTitle: window.title, documentURL: window.url
             )
         }
         return Probe(
             text: text, appName: appName, bundleID: bundleID, pid: pid,
             element: element,
             selectionBounds: selectionBounds(of: element),
-            windowTitle: window.title, documentURL: window.url,
-            detail: "取得成功"
+            windowTitle: window.title, documentURL: window.url
         )
     }
 

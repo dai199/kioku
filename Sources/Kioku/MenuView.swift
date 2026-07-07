@@ -8,12 +8,6 @@ struct MenuView: View {
     var body: some View {
         if permission.isTrusted {
             Toggle("選択検知を有効にする", isOn: $coordinator.isMonitoringEnabled)
-            Divider()
-            Button {
-                showProbeResult()
-            } label: {
-                Label("選択テキストをテスト取得", systemImage: "text.magnifyingglass")
-            }
         } else {
             Text("アクセシビリティ権限が必要です")
             Button {
@@ -57,24 +51,5 @@ struct MenuView: View {
             NSApp.terminate(nil)
         }
         .keyboardShortcut("q")
-    }
-
-    /// メニュー選択時点ではフォーカスは前面アプリに残っているため、
-    /// そのアプリの選択テキストをAX経由で読み、結果をアラートで表示する。
-    private func showProbeResult() {
-        let probe = SelectionProbe.readCurrentSelection()
-
-        let alert = NSAlert()
-        if let text = probe.text {
-            alert.messageText = "選択テキストを取得できました"
-            let source = probe.appName.map { "出典アプリ: \($0)\n\n" } ?? ""
-            alert.informativeText = source + text
-        } else {
-            alert.messageText = "選択テキストを取得できませんでした"
-            let source = probe.appName.map { "前面アプリ: \($0)\n" } ?? ""
-            alert.informativeText = source + probe.detail
-        }
-        NSApp.activate(ignoringOtherApps: true)
-        alert.runModal()
     }
 }
