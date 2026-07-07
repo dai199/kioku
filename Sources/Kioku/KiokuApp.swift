@@ -22,10 +22,13 @@ private struct MenuBarIcon: View {
     var body: some View {
         // メニューバーはモノクロのテンプレート画像が正（HIG: The menu bar）。
         // テンプレート指定によりライト/ダーク・選択状態の色反転はOSが面倒を見る
-        Image(systemName: permission.isTrusted
-            ? "translate"
-            : "exclamationmark.triangle.fill")
-            .renderingMode(.template)
-            .accessibilityLabel("Kioku")
+        if permission.isTrusted {
+            Image(nsImage: BrandIcon.template)
+                .accessibilityLabel("Kioku")
+        } else {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .renderingMode(.template)
+                .accessibilityLabel("Kioku（権限が必要）")
+        }
     }
 }

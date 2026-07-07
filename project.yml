@@ -13,12 +13,15 @@ targets:
     platform: macOS
     sources:
       - Sources/Kioku
+      - path: Assets
+        buildPhase: resources
     dependencies:
       - package: GRDB
     info:
       path: Sources/Kioku/Info.plist
       properties:
         CFBundleDisplayName: Kioku
+        CFBundleIconFile: Kioku
         # メニューバー常駐アプリ（Dockアイコン・アプリスイッチャーに出さない）
         LSUIElement: true
         NSHumanReadableCopyright: "© 2026 Daiki Tagami"
