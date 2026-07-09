@@ -39,6 +39,12 @@ enum LanguageDetector {
     /// 選択テキストの言語から翻訳方向を決める。
     /// 日本語なら日→英（ライティング支援）、それ以外は英→日（読解支援）とみなす。
     static func direction(for text: String) -> (source: String, target: String) {
+        // ひらがな・カタカナが1文字でもあれば日本語とみなす。
+        // 英語の用語が多く混ざった日本語文で、NLの判定が英語に倒れるのを防ぐ
+        let containsKana = text.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) }
+        if containsKana {
+            return ("ja", "en")
+        }
         let recognizer = NLLanguageRecognizer()
         recognizer.processString(String(text.prefix(200)))
         if recognizer.dominantLanguage == .japanese {

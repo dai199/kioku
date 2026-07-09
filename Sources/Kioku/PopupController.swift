@@ -209,7 +209,19 @@ struct PopupView: View {
             Text(session.event.appName ?? "選択テキスト")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
-            DirectionBadge(sourceLang: session.sourceLanguage)
+            // バッジクリックで方向を反転して再翻訳（自動判定が外れたとき用）
+            Button {
+                session.flipDirection()
+            } label: {
+                HStack(spacing: 3) {
+                    DirectionBadge(sourceLang: session.sourceLanguage)
+                    Image(systemName: "arrow.left.arrow.right")
+                        .font(.system(size: 7, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+            .help("翻訳方向を切り替える")
             Spacer()
             Button(action: onClose) {
                 Image(systemName: "xmark.circle.fill")

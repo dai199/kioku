@@ -18,8 +18,8 @@ final class TranslationSession: ObservableObject {
     @Published private(set) var phase: Phase = .loading
 
     let event: SelectionEvent
-    let sourceLanguage: String
-    let targetLanguage: String
+    private(set) var sourceLanguage: String
+    private(set) var targetLanguage: String
 
     /// 既に提示した訳（再生成で避けるため保持）
     private var previousCandidates: [String] = []
@@ -58,6 +58,18 @@ final class TranslationSession: ObservableObject {
     func regenerate() {
         guard case .done(let current) = phase else { return }
         previousCandidates.append(current)
+        runTranslation()
+    }
+
+    /// 翻訳方向を反転して翻訳し直す（自動判定が外れたとき用）。
+    /// 方向が変わると候補の意味が変わるため、選好の記録はリセットする。
+    func flipDirection() {
+        task?.cancel()
+        swap(&sourceLanguage, &targetLanguage)
+        previousCandidates = []
+        candidates = []
+        adoptedIndex = nil
+        adoptedVia = nil
         runTranslation()
     }
 
