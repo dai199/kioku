@@ -15,10 +15,8 @@ final class AppCoordinator: ObservableObject {
     private let floatingIcon = FloatingIconController()
     private let popup = PopupController()
     private lazy var settingsWindow = SettingsWindowController(settings: settings)
-    private lazy var historyWindow = HistoryWindowController()
     private lazy var reportManager = ReportManager(settings: settings)
-    private lazy var reportWindow = ReportWindowController(manager: reportManager)
-    private lazy var reviewWindow = ReviewWindowController()
+    private lazy var mainWindow = MainWindowController(reportManager: reportManager)
     private let translationCache = TranslationCache()
     private var currentEvent: SelectionEvent?
     /// スペース復帰時の再表示判定に使う「最近認識した選択」（AX要素は持たない軽量記録）
@@ -132,14 +130,14 @@ final class AppCoordinator: ObservableObject {
     }
 
     func openHistory() {
-        historyWindow.show()
+        mainWindow.show(.history)
     }
 
     func openReport() {
-        reportWindow.show()
+        mainWindow.show(.report)
     }
 
     func openReview() {
-        reviewWindow.show()
+        mainWindow.show(.review)
     }
 }

@@ -2,39 +2,8 @@ import AppKit
 import GRDB
 import SwiftUI
 
-/// 週次レポートウィンドウ。
-@MainActor
-final class ReportWindowController {
-    private let manager: ReportManager
-    private var window: NSWindow?
-
-    init(manager: ReportManager) {
-        self.manager = manager
-    }
-
-    func show() {
-        if window == nil {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 560, height: 560),
-                styleMask: [.titled, .closable, .resizable, .miniaturizable],
-                backing: .buffered,
-                defer: false
-            )
-            window.title = "週次レポート"
-            window.isReleasedWhenClosed = false
-            window.contentView = NSHostingView(
-                rootView: ReportView(model: ReportModel(), manager: manager)
-            )
-            window.center()
-            window.setFrameAutosaveName("KiokuReportWindow")
-            self.window = window
-        }
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
-    }
-}
-
 /// 最新レポートと提案中カードの状態。DB監視で自動更新される。
+/// メインウィンドウが保持し、画面を切り替えても監視は張りっぱなしにする。
 @MainActor
 final class ReportModel: ObservableObject {
     @Published private(set) var report: WeeklyReportRecord?
@@ -102,7 +71,7 @@ final class ReportModel: ObservableObject {
 }
 
 struct ReportView: View {
-    @StateObject var model: ReportModel
+    @ObservedObject var model: ReportModel
     @ObservedObject var manager: ReportManager
 
     var body: some View {
@@ -120,7 +89,6 @@ struct ReportView: View {
             }
         }
         .onAppear { model.startObserving() }
-        .frame(minWidth: 520, minHeight: 480)
     }
 
     private var header: some View {

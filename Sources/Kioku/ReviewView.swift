@@ -1,33 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// SRS復習ウィンドウ。開くたびに新しいセッションを開始する。
-@MainActor
-final class ReviewWindowController {
-    private var window: NSWindow?
-
-    func show() {
-        if window == nil {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 480, height: 420),
-                styleMask: [.titled, .closable],
-                backing: .buffered,
-                defer: false
-            )
-            window.title = "復習"
-            window.isReleasedWhenClosed = false
-            window.center()
-            window.setFrameAutosaveName("KiokuReviewWindow")
-            self.window = window
-        }
-        // 開くたびにセッションを仕切り直す
-        window?.contentView = NSHostingView(rootView: ReviewView(model: ReviewModel()))
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
-    }
-}
-
 /// 復習セッション1回分の状態。
+/// メインウィンドウの「復習」セクションで、開くたび・切り替えるたびに作り直される。
 @MainActor
 final class ReviewModel: ObservableObject {
     /// 1日の復習上限（SPEC: 5分以内・20枚程度）
@@ -140,7 +115,7 @@ struct ReviewView: View {
                 reviewBody
             }
         }
-        .frame(width: 480, height: 420)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear { model.startSession() }
     }
 
@@ -210,5 +185,7 @@ struct ReviewView: View {
             }
         }
         .padding(20)
+        // 幅の広いウィンドウでも読みやすさを保つため、内容の幅は絞って中央に置く
+        .frame(maxWidth: 460)
     }
 }

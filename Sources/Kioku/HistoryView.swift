@@ -2,32 +2,8 @@ import AppKit
 import GRDB
 import SwiftUI
 
-/// 翻訳履歴ウィンドウ。
-@MainActor
-final class HistoryWindowController {
-    private var window: NSWindow?
-
-    func show() {
-        if window == nil {
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 560, height: 480),
-                styleMask: [.titled, .closable, .resizable, .miniaturizable],
-                backing: .buffered,
-                defer: false
-            )
-            window.title = "翻訳履歴"
-            window.isReleasedWhenClosed = false
-            window.contentView = NSHostingView(rootView: HistoryView(model: HistoryModel()))
-            window.center()
-            window.setFrameAutosaveName("KiokuHistoryWindow")
-            self.window = window
-        }
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
-    }
-}
-
 /// 履歴一覧の状態。DBを監視し、新しい翻訳が入ると自動で反映される。
+/// メインウィンドウが保持し、画面を切り替えても監視は張りっぱなしにする。
 @MainActor
 final class HistoryModel: ObservableObject {
     @Published private(set) var logs: [TranslationLog] = []
@@ -75,7 +51,7 @@ final class HistoryModel: ObservableObject {
 }
 
 struct HistoryView: View {
-    @StateObject var model: HistoryModel
+    @ObservedObject var model: HistoryModel
 
     var body: some View {
         VStack(spacing: 0) {
@@ -110,7 +86,6 @@ struct HistoryView: View {
             }
         }
         .onAppear { model.startObserving() }
-        .frame(minWidth: 480, minHeight: 360)
     }
 
     private func copy(_ text: String) {
