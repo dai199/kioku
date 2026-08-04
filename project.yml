@@ -33,3 +33,24 @@ targets:
         SWIFT_VERSION: "6.0"
         # Accessibility APIを使うためApp Sandboxは無効（entitlementsなし）
         ENABLE_HARDENED_RUNTIME: false
+    # `xcodebuild -scheme Kioku test` でユニットテストが走るようにする
+    scheme:
+      testTargets:
+        - KiokuTests
+
+  # 純粋ロジック（選択フィルタ・言語判定・SRSスケジューラ・JSON抽出）のテスト。
+  # AX APIやネットワークに触れる層はテスト対象にしていない
+  KiokuTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests/KiokuTests
+    dependencies:
+      - target: Kioku
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.daikitagami.kioku.tests
+        DEVELOPMENT_TEAM: C8FHUZ27C7
+        CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: true
