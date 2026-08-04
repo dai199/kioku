@@ -280,6 +280,13 @@ final class DatabaseManager: Sendable {
         }
     }
 
+    /// 最も古い翻訳ログの日時。初回レポートの対象期間の開始に使う。
+    func oldestLogDate() async throws -> Date? {
+        try await dbQueue.read { db in
+            try TranslationLog.order(Column("createdAt").asc).fetchOne(db)?.createdAt
+        }
+    }
+
     func latestReport() async throws -> WeeklyReportRecord? {
         try await dbQueue.read { db in
             try WeeklyReportRecord.order(Column("generatedAt").desc).fetchOne(db)

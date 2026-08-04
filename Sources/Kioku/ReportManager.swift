@@ -37,17 +37,23 @@ final class ReportManager: ObservableObject {
     private func autoGenerateIfDue() async {
         guard settings.hasAPIKey, !isGenerating else { return }
         guard let last = try? await store.latestReport() else {
-            // レポート未生成: ログが貯まっていれば初回生成
-            await generate(notify: true, requireMinimumLogs: true)
+            // レポート未生成: ログが貯まっていれば初回生成。
+            // 最初のログまで遡って対象にする（インストール直後の数日を取りこぼさない）
+            await generate(
+                notify: true, from: try? await store.oldestLogDate(), requireMinimumLogs: true
+            )
             return
         }
-        if Date().timeIntervalSince(last.generatedAt) >= Self.weekInterval {
-            await generate(notify: true, requireMinimumLogs: true)
-        }
+        guard Date().timeIntervalSince(last.generatedAt) >= Self.weekInterval else { return }
+        // 前回の対象期間の終わりから続ける。生成の間隔は7日でも、
+        // アプリを起動していなかった期間があると「直近7日」では隙間が空き、
+        // その間のログが二度と分析されないため、期間は必ず連続させる
+        await generate(notify: true, from: last.periodEnd, requireMinimumLogs: true)
     }
 
     /// レポートを生成して保存する。カード候補はproposed状態で登録される。
-    func generate(notify: Bool, requireMinimumLogs: Bool = false) async {
+    /// - Parameter start: 対象期間の開始。nilなら直近1週間を見る（手動生成の既定）。
+    func generate(notify: Bool, from start: Date? = nil, requireMinimumLogs: Bool = false) async {
         guard !isGenerating else { return }
         isGenerating = true
         lastError = nil
@@ -55,15 +61,17 @@ final class ReportManager: ObservableObject {
 
         do {
             let end = Date()
-            let start = end.addingTimeInterval(-Self.weekInterval)
+            let start = start ?? end.addingTimeInterval(-Self.weekInterval)
             let logs = try await store.fetchLogs(from: start, to: end)
 
-            if logs.isEmpty {
+            if requireMinimumLogs {
+                // 自動生成はログが貯まるまで静かに見送る。
+                // 6時間ごとに走るので、ここでlastErrorを立てると
+                // ユーザーが何もしていないのに画面へエラーが出てしまう
+                guard logs.count >= Self.minimumLogCount else { return }
+            } else if logs.isEmpty {
                 lastError = "この1週間の翻訳ログがありません。"
                 return
-            }
-            if requireMinimumLogs, logs.count < Self.minimumLogCount {
-                return // 自動生成はログが貯まるまで静かに見送る
             }
 
             let client = GeminiClient(
