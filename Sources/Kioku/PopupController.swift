@@ -320,11 +320,26 @@ struct PopupView: View {
 
         case .done(let translation):
             VStack(alignment: .leading, spacing: 8) {
-                // 訳文はこのポップアップの主役: title3で最も大きく
-                Text(Self.clip(translation, maxLines: 20, maxChars: 1000).text)
-                    .font(.title3)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                // 読み上げは原文・訳文とも「その文の右」に置く（左右対称）。
+                // 下のボタン列は「訳をどうするか」の操作だけに絞る
+                HStack(alignment: .top, spacing: 6) {
+                    // 訳文はこのポップアップの主役: title3で最も大きく
+                    Text(Self.clip(translation, maxLines: 20, maxChars: 1000).text)
+                        .font(.title3)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Button {
+                        SpeechSpeaker.shared.speak(
+                            translation, languageCode: session.targetLanguage
+                        )
+                    } label: {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("訳文を読み上げ")
+                }
                 HStack(spacing: 10) {
                     // 日→英ライティング支援: 選択中の日本語を採用した英文で置き換える
                     if session.sourceLanguage == "ja", TextReplacer.isReplaceable(session.event) {
@@ -360,26 +375,25 @@ struct PopupView: View {
                     }
                     .controlSize(.small)
                     // 「覚える」: AI提案を待たずその場でカード化する。
-                    // ボタン列に文字を増やす余地がないのでアイコンのみ（読み上げと同じ扱い）
+                    // 学習アプリとしての核なので、幅が許すかぎりラベルを出す
                     Button {
                         session.addCard(for: translation)
                     } label: {
-                        Image(systemName: session.cardState == .notAdded
-                            ? "rectangle.stack.badge.plus"
-                            : "checkmark")
+                        if session.cardState == .notAdded {
+                            Label("覚える", systemImage: "rectangle.stack.badge.plus")
+                        } else {
+                            Label("追加済み", systemImage: "checkmark")
+                        }
                     }
                     .controlSize(.small)
                     .disabled(session.cardState != .notAdded)
                     .help(cardHelp)
-                    Button {
-                        SpeechSpeaker.shared.speak(translation, languageCode: session.targetLanguage)
-                    } label: {
-                        Image(systemName: "speaker.wave.2.fill")
-                    }
-                    .controlSize(.small)
-                    .help("訳文を読み上げ")
                     Spacer()
                 }
+                // ボタンはテキストのみ（macOS標準のプッシュボタンの作法）。
+                // アイコンを添えると1つあたり約18pt太り、4つ並べると幅360ptに収まらない。
+                // Labelのまま宣言しておき、スタイルだけここで落とす
+                .labelStyle(.titleOnly)
             }
 
         case .failed(let message, let missingAPIKey):
