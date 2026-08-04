@@ -1,4 +1,9 @@
 import Foundation
+import os
+
+/// 翻訳パスのログ。ポップアップは失敗を「翻訳中…」のまま抱えることがあるため、
+/// どこで止まったかを後から追えるようにしておく。本文は記録しない（長さのみ）。
+let translationLogger = Logger(subsystem: "com.daikitagami.kioku", category: "translate")
 
 enum GeminiError: LocalizedError {
     case missingAPIKey
@@ -91,10 +96,14 @@ struct GeminiClient: Sendable {
                     )
                     urlRequest.httpBody = try JSONEncoder().encode(body)
 
+                    translationLogger.log(
+                        "ストリーム要求 model=\(client.model, privacy: .public)"
+                    )
                     let (bytes, response) = try await URLSession.shared.bytes(for: urlRequest)
                     guard let http = response as? HTTPURLResponse else {
                         throw URLError(.badServerResponse)
                     }
+                    translationLogger.log("HTTP \(http.statusCode, privacy: .public)")
                     guard http.statusCode == 200 else {
                         var errorBody = ""
                         for try await line in bytes.lines {
@@ -107,6 +116,7 @@ struct GeminiClient: Sendable {
                         throw GeminiError.apiError(status: http.statusCode, message: message)
                     }
 
+                    var chunkCount = 0
                     for try await line in bytes.lines {
                         guard line.hasPrefix("data:") else { continue }
                         let payload = line.dropFirst(5).trimmingCharacters(in: .whitespaces)
@@ -118,11 +128,18 @@ struct GeminiClient: Sendable {
                             .compactMap(\.text)
                             .joined() ?? ""
                         if !text.isEmpty {
+                            chunkCount += 1
                             continuation.yield(text)
                         }
                     }
+                    translationLogger.log(
+                        "ストリーム終了 chunks=\(chunkCount, privacy: .public)"
+                    )
                     continuation.finish()
                 } catch {
+                    translationLogger.error(
+                        "ストリーム失敗: \(error.localizedDescription, privacy: .public)"
+                    )
                     continuation.finish(throwing: error)
                 }
             }

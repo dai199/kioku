@@ -55,6 +55,20 @@ KiokuApp (MenuBarExtra, LSUIElement)
 
 テストはアプリをテストホストとして起動する構成なので、実行中に実DBが読み取り専用で開かれる。
 
+## 動作確認
+
+**変更を目視で確かめる前に必ずアプリを再起動する**（`make run`、または `pkill -x Kioku` → `open`）。
+`make build` はバイナリを差し替えるだけで、起動中のプロセスは古いまま動き続ける。
+メニューバー常駐なので何日も起動しっぱなしになりやすく、
+「実装したのに出てこない」「動きがおかしい」の大半はこれが原因。
+
+翻訳パスは `os.Logger`（subsystem `com.daikitagami.kioku`）に記録している。
+挙動が怪しいときはまずログを見る:
+
+```sh
+log show --last 10m --predicate 'subsystem == "com.daikitagami.kioku"' --info --debug
+```
+
 ## 進め方
 
 - **コミットはユーザーの承認後**。ビルド（と必要ならテスト）を通し、動作を確かめてもらってから

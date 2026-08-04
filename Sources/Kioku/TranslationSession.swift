@@ -183,6 +183,14 @@ final class TranslationSession: ObservableObject {
         }
 
         phase = .loading
+        translationLogger.log(
+            """
+            翻訳開始 \(self.sourceLanguage, privacy: .public)→\
+            \(self.targetLanguage, privacy: .public) \
+            文字数=\(self.event.text.count, privacy: .public) \
+            再生成=\(self.previousCandidates.count, privacy: .public)
+            """
+        )
         task = Task { @MainActor in
             do {
                 let stream = engine.translateStream(TranslationRequest(
@@ -193,24 +201,40 @@ final class TranslationSession: ObservableObject {
                 ))
                 var accumulated = ""
                 for try await piece in stream {
-                    guard !Task.isCancelled else { return }
+                    // キャンセル時はphaseを動かさずに抜ける＝「翻訳中…」のまま残る。
+                    // 表示が止まったときの犯人になりうるので必ず記録する
+                    guard !Task.isCancelled else {
+                        translationLogger.log("翻訳キャンセル（受信中）")
+                        return
+                    }
                     accumulated += piece
                     phase = .streaming(accumulated)
                 }
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled else {
+                    translationLogger.log("翻訳キャンセル（受信完了後）")
+                    return
+                }
 
                 let translated = accumulated.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !translated.isEmpty else { throw GeminiError.emptyResult }
                 phase = .done(translated)
+                translationLogger.log("翻訳完了 文字数=\(translated.count, privacy: .public)")
                 candidates.append(translated)
                 if previousCandidates.isEmpty {
                     cache?.store(translated, text: event.text, source: sourceLanguage, target: targetLanguage)
                 }
                 logReadingIfNeeded(translated)
             } catch GeminiError.missingAPIKey {
+                translationLogger.error("翻訳失敗: APIキー未設定")
                 phase = .failed(message: "Gemini APIキーが設定されていません。", missingAPIKey: true)
             } catch {
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled else {
+                    translationLogger.log("翻訳キャンセル（エラー処理中）")
+                    return
+                }
+                translationLogger.error(
+                    "翻訳失敗: \(error.localizedDescription, privacy: .public)"
+                )
                 phase = .failed(message: error.localizedDescription, missingAPIKey: false)
             }
         }
