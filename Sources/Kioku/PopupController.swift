@@ -173,6 +173,16 @@ struct PopupView: View {
         }
     }
 
+    /// 「覚える」ボタンのツールチップ。アイコンのみなので、
+    /// 何が起きたか（起きるか）はここで伝える。
+    private var cardHelp: String {
+        switch session.cardState {
+        case .notAdded: "この訳を復習カードに追加"
+        case .added: "復習カードに追加しました"
+        case .alreadyExists: "同じカードが既にあります"
+        }
+    }
+
     private var bubble: BubbleShape {
         BubbleShape(arrowMidX: showArrow ? arrowMidX : nil)
     }
@@ -319,8 +329,12 @@ struct PopupView: View {
                     // 日→英ライティング支援: 選択中の日本語を採用した英文で置き換える
                     if session.sourceLanguage == "ja", TextReplacer.isReplaceable(session.event) {
                         Button {
-                            if TextReplacer.replace(event: session.event, with: translation) {
-                                session.recordAdoption(of: translation, via: .replace)
+                            // 置換の成否だけでなく、AX書き込みかペーストかも記録する
+                            // （ペーストは反映を確認できないため区別する）
+                            if let method = TextReplacer
+                                .replace(event: session.event, with: translation)
+                                .adoptionMethod {
+                                session.recordAdoption(of: translation, via: method)
                                 onClose()
                             }
                         } label: {
@@ -345,6 +359,18 @@ struct PopupView: View {
                         Label("コピー", systemImage: "doc.on.doc")
                     }
                     .controlSize(.small)
+                    // 「覚える」: AI提案を待たずその場でカード化する。
+                    // ボタン列に文字を増やす余地がないのでアイコンのみ（読み上げと同じ扱い）
+                    Button {
+                        session.addCard(for: translation)
+                    } label: {
+                        Image(systemName: session.cardState == .notAdded
+                            ? "rectangle.stack.badge.plus"
+                            : "checkmark")
+                    }
+                    .controlSize(.small)
+                    .disabled(session.cardState != .notAdded)
+                    .help(cardHelp)
                     Button {
                         SpeechSpeaker.shared.speak(translation, languageCode: session.targetLanguage)
                     } label: {

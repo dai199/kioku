@@ -306,6 +306,44 @@ final class DatabaseManager: Sendable {
         }
     }
 
+    /// 手動で「覚える」カードを追加する（SPEC フェーズ1.5-3）。
+    /// AI提案と違い承認の段階を挟まないので、はじめからactive・当日期限で作る。
+    /// 同じ表裏のカードが既にあれば追加しない（履歴とポップアップの二重追加を防ぐ。
+    /// 却下済みのカードは「もう要らない」の意思表示なので重複判定に含めない）。
+    /// - Returns: 追加したらtrue、既にあればfalse
+    @discardableResult
+    func addManualCard(
+        front: String, back: String, logId: Int64?, now: Date = Date()
+    ) async throws -> Bool {
+        try await dbQueue.write { db in
+            let duplicates = try SRSCard
+                .filter(Column("front") == front && Column("back") == back)
+                .filter(Column("status") != SRSCard.Status.rejected.rawValue)
+                .fetchCount(db)
+            guard duplicates == 0 else { return false }
+
+            var card = SRSCard(
+                id: nil,
+                createdAt: now,
+                logId: logId,
+                reportId: nil,
+                front: front,
+                back: back,
+                reason: nil,
+                origin: SRSCard.Origin.manual.rawValue,
+                status: SRSCard.Status.active.rawValue,
+                stability: 0,
+                difficulty: 0,
+                dueDate: now,
+                reviewCount: 0,
+                lapses: 0,
+                lastReviewedAt: nil
+            )
+            try card.insert(db)
+            return true
+        }
+    }
+
     func setCardStatus(id: Int64, status: SRSCard.Status, dueDate: Date?) async throws {
         try await dbQueue.write { db in
             guard var card = try SRSCard.fetchOne(db, key: id) else { return }

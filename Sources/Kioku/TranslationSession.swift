@@ -1,7 +1,11 @@
 import Foundation
 
+/// 訳をどう採用したか。品質評価（SPEC §12）の行動シグナルとして記録する。
+/// `paste`は⌘Vを送っただけで反映を確認できていないため、
+/// 採用率を測るときは`replace`と同列に扱わないこと。
 enum AdoptionMethod: String, Sendable {
-    case replace
+    case replace   // AX書き込みでの置換（反映を確認済み）
+    case paste     // ペーストシミュレートでの置換（反映は未確認）
     case copy
 }
 
@@ -15,7 +19,16 @@ final class TranslationSession: ObservableObject {
         case failed(message: String, missingAPIKey: Bool)
     }
 
+    /// 「覚える」ボタンの状態。訳が変われば別のカードになるので、
+    /// 再生成・方向反転のたびに未追加へ戻す。
+    enum CardState: Sendable {
+        case notAdded
+        case added          // このセッションで追加した
+        case alreadyExists  // 同じ表裏のカードが既にあった
+    }
+
     @Published private(set) var phase: Phase = .loading
+    @Published private(set) var cardState: CardState = .notAdded
 
     let event: SelectionEvent
     private(set) var sourceLanguage: String
@@ -58,7 +71,28 @@ final class TranslationSession: ObservableObject {
     func regenerate() {
         guard case .done(let current) = phase else { return }
         previousCandidates.append(current)
+        cardState = .notAdded
         runTranslation()
+    }
+
+    /// 表示中の訳を復習カードとして手動追加する（SPEC フェーズ1.5-3）。
+    /// AI提案を待たずにその場でカード化できるようにして、習慣ループを強くする。
+    func addCard(for translation: String) {
+        guard cardState == .notAdded else { return }
+        let content = CardContent.make(
+            sourceText: event.text,
+            translatedText: translation,
+            sourceLang: sourceLanguage
+        )
+        let store = self.store
+        Task { @MainActor in
+            // ポップアップからは元ログのidを辿れないためlogIdはnil
+            // （履歴画面から追加した場合は紐づく）
+            let added = (try? await store.addManualCard(
+                front: content.front, back: content.back, logId: nil
+            )) ?? false
+            cardState = added ? .added : .alreadyExists
+        }
     }
 
     /// 翻訳方向を反転して翻訳し直す（自動判定が外れたとき用）。
@@ -70,6 +104,7 @@ final class TranslationSession: ObservableObject {
         candidates = []
         adoptedIndex = nil
         adoptedVia = nil
+        cardState = .notAdded
         runTranslation()
     }
 

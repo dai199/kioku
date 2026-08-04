@@ -8,8 +8,11 @@ import SwiftUI
 final class HistoryModel: ObservableObject {
     @Published private(set) var logs: [TranslationLog] = []
     @Published var searchText = ""
+    /// カード化済みのログID。行に印を出し、二重追加を防ぐ
+    @Published private(set) var cardedLogIDs: Set<Int64> = []
 
     private var cancellable: AnyDatabaseCancellable?
+    private var cardsCancellable: AnyDatabaseCancellable?
 
     func startObserving() {
         guard cancellable == nil else { return }
@@ -30,6 +33,45 @@ final class HistoryModel: ObservableObject {
                 }
             }
         )
+        // 却下したカードは「もう要らない」の意思表示なので、
+        // 印を消して再びカード化できる状態に戻す
+        cardsCancellable = ValueObservation
+            .tracking { db in
+                try SRSCard
+                    .filter(Column("logId") != nil)
+                    .filter(Column("status") != SRSCard.Status.rejected.rawValue)
+                    .select(Column("logId"), as: Int64.self)
+                    .fetchSet(db)
+            }
+            .start(
+                in: DatabaseManager.shared.dbQueue,
+                onError: { NSLog("カード化済みログの監視に失敗: \($0)") },
+                onChange: { ids in
+                    Task { @MainActor [weak self] in
+                        self?.cardedLogIDs = ids
+                    }
+                }
+            )
+    }
+
+    func isCarded(_ log: TranslationLog) -> Bool {
+        guard let id = log.id else { return false }
+        return cardedLogIDs.contains(id)
+    }
+
+    /// 履歴の1件を復習カードにする（SPEC フェーズ1.5-3）。
+    /// ポップアップと違い元ログのidが分かるので、カードに紐づけておく。
+    func addCard(from log: TranslationLog) {
+        let content = CardContent.make(
+            sourceText: log.sourceText,
+            translatedText: log.translatedText,
+            sourceLang: log.sourceLang
+        )
+        Task {
+            try? await DatabaseManager.shared.addManualCard(
+                front: content.front, back: content.back, logId: log.id
+            )
+        }
     }
 
     var filteredLogs: [TranslationLog] {
@@ -74,8 +116,11 @@ struct HistoryView: View {
                 )
             } else {
                 List(model.filteredLogs) { log in
-                    HistoryRow(log: log)
+                    HistoryRow(log: log, isCarded: model.isCarded(log))
                         .contextMenu {
+                            Button("復習カードにする") { model.addCard(from: log) }
+                                .disabled(model.isCarded(log))
+                            Divider()
                             Button("原文をコピー") { copy(log.sourceText) }
                             Button("訳文をコピー") { copy(log.translatedText) }
                             Divider()
@@ -96,6 +141,7 @@ struct HistoryView: View {
 
 private struct HistoryRow: View {
     let log: TranslationLog
+    let isCarded: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -110,6 +156,12 @@ private struct HistoryRow: View {
             // メタ層: caption2 / tertiary
             HStack(spacing: 6) {
                 DirectionBadge(sourceLang: log.sourceLang)
+                if isCarded {
+                    Image(systemName: "square.stack.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .help("復習カードに追加済み")
+                }
                 if let app = log.sourceApp {
                     Text(app)
                         .font(.caption2)

@@ -15,6 +15,24 @@ enum TextReplacer {
         subsystem: "com.daikitagami.kioku", category: "replace"
     )
 
+    /// 置換の結果。
+    /// ペーストは⌘Vを送るだけで反映まで確認できないため、
+    /// 反映を検証できたAX書き込みとは区別する（選好シグナルの精度のため）。
+    enum Outcome: Sendable {
+        case replaced   // AX書き込み。反映を読み返して確認済み
+        case pasted     // ⌘V送信。反映は未確認
+        case failed
+
+        /// 選好シグナルとして記録する採用方法。失敗ならnil（記録しない）。
+        var adoptionMethod: AdoptionMethod? {
+            switch self {
+            case .replaced: .replace
+            case .pasted: .paste
+            case .failed: nil
+            }
+        }
+    }
+
     /// 置換ボタンを出すべきかの判定。
     static func isReplaceable(_ event: SelectionEvent) -> Bool {
         guard let element = event.element else { return false }
@@ -22,8 +40,8 @@ enum TextReplacer {
             || isSettable(element, kAXValueAttribute)
     }
 
-    /// 置換を実行する。成功したらtrue。
-    static func replace(event: SelectionEvent, with text: String) -> Bool {
+    /// 置換を実行する。
+    static func replace(event: SelectionEvent, with text: String) -> Outcome {
         if let element = event.element {
             let selectedTextSettable = isSettable(element, kAXSelectedTextAttribute)
             logger.log("置換開始 app=\(event.appName ?? "?", privacy: .public) AXSelectedText書込可=\(selectedTextSettable)")
@@ -35,14 +53,14 @@ enum TextReplacer {
                 logger.log("AX書き込み結果=\(result.rawValue)")
                 if result == .success, verifyReplacement(element: element, original: event.text) {
                     logger.log("AX書き込みで置換成功")
-                    return true
+                    return .replaced
                 }
                 logger.log("AX書き込みが反映されていない（サイレント失敗）→ ペーストへフォールバック")
             }
         } else {
             logger.log("AX要素なし → ペーストへフォールバック")
         }
-        return pasteReplace(text: text, targetPID: event.pid)
+        return pasteReplace(text: text, targetPID: event.pid) ? .pasted : .failed
     }
 
     /// 書き込み後も選択テキストが元の文のままなら、反映されなかったとみなす。
