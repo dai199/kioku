@@ -6,30 +6,69 @@ import SwiftUI
 /// メインウィンドウが保持し、画面を切り替えても監視は張りっぱなしにする。
 @MainActor
 final class ReportModel: ObservableObject {
-    @Published private(set) var report: WeeklyReportRecord?
+    /// 生成済みレポート（新しい順）
+    @Published private(set) var reports: [WeeklyReportRecord] = []
+    /// 表示中のレポート。nilは「常に最新を追う」
+    @Published var selectedReportID: Int64?
     @Published private(set) var proposedCards: [SRSCard] = []
 
     private var reportCancellable: AnyDatabaseCancellable?
     private var cardsCancellable: AnyDatabaseCancellable?
 
+    var selectedReport: WeeklyReportRecord? {
+        if let selectedReportID,
+           let match = reports.first(where: { $0.id == selectedReportID }) {
+            return match
+        }
+        return reports.first
+    }
+
     var reportContent: WeeklyReportContent? {
-        guard let report else { return nil }
+        guard let report = selectedReport else { return nil }
         return try? JSONDecoder().decode(
             WeeklyReportContent.self, from: Data(report.summaryJSON.utf8)
         )
+    }
+
+    /// 表示中のレポートが提案した、まだ未承認のカード。
+    var cardsForSelectedReport: [SRSCard] {
+        guard let id = selectedReport?.id else { return [] }
+        return proposedCards.filter { $0.reportId == id }
+    }
+
+    // MARK: - 週の移動
+
+    private var selectedIndex: Int? {
+        guard let id = selectedReport?.id else { return nil }
+        return reports.firstIndex { $0.id == id }
+    }
+
+    var isViewingLatest: Bool { (selectedIndex ?? 0) == 0 }
+    var canGoOlder: Bool { (selectedIndex ?? 0) + 1 < reports.count }
+    var canGoNewer: Bool { (selectedIndex ?? 0) > 0 }
+
+    func goOlder() { move(by: 1) }
+    func goNewer() { move(by: -1) }
+    func goLatest() { selectedReportID = nil }
+
+    private func move(by offset: Int) {
+        guard let index = selectedIndex else { return }
+        let target = index + offset
+        guard reports.indices.contains(target) else { return }
+        selectedReportID = target == 0 ? nil : reports[target].id
     }
 
     func startObserving() {
         guard reportCancellable == nil else { return }
         reportCancellable = ValueObservation
             .tracking { db in
-                try WeeklyReportRecord.order(Column("generatedAt").desc).fetchOne(db)
+                try WeeklyReportRecord.order(Column("generatedAt").desc).fetchAll(db)
             }
             .start(
                 in: DatabaseManager.shared.dbQueue,
                 onError: { NSLog("レポート監視に失敗: \($0)") },
-                onChange: { report in
-                    Task { @MainActor [weak self] in self?.report = report }
+                onChange: { reports in
+                    Task { @MainActor [weak self] in self?.reports = reports }
                 }
             )
         cardsCancellable = ValueObservation
@@ -64,7 +103,7 @@ final class ReportModel: ObservableObject {
     }
 
     func approveAll() {
-        for card in proposedCards {
+        for card in cardsForSelectedReport {
             approve(card)
         }
     }
@@ -92,11 +131,35 @@ struct ReportView: View {
     }
 
     private var header: some View {
-        HStack {
-            if let report = model.report {
+        HStack(spacing: 8) {
+            // 週送り（ツールバーの週メニューと同じ選択状態を共有する）
+            HStack(spacing: 4) {
+                Button {
+                    model.goOlder()
+                } label: {
+                    Image(systemName: "chevron.left")
+                }
+                .disabled(!model.canGoOlder)
+                .help("前の週")
+
+                Button {
+                    model.goNewer()
+                } label: {
+                    Image(systemName: "chevron.right")
+                }
+                .disabled(!model.canGoNewer)
+                .help("次の週")
+            }
+            .controlSize(.small)
+
+            if let report = model.selectedReport {
                 Text("\(report.periodStart, format: .dateTime.month().day()) 〜 \(report.periodEnd, format: .dateTime.month().day()) ・ 生成: \(report.generatedAt, format: .relative(presentation: .named))")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
+            }
+            if !model.isViewingLatest {
+                Button("最新へ") { model.goLatest() }
+                    .controlSize(.small)
             }
             Spacer()
             if manager.isGenerating {
@@ -167,23 +230,23 @@ struct ReportView: View {
                     }
                 }
 
-                // カード候補
+                // カード候補（表示中の週に提案されたもの）
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("覚えるカード候補（\(model.proposedCards.count)）")
+                        Text("覚えるカード候補（\(model.cardsForSelectedReport.count)）")
                             .font(.headline)
                         Spacer()
-                        if model.proposedCards.count > 1 {
+                        if model.cardsForSelectedReport.count > 1 {
                             Button("すべて承認") { model.approveAll() }
                                 .controlSize(.small)
                         }
                     }
-                    if model.proposedCards.isEmpty {
+                    if model.cardsForSelectedReport.isEmpty {
                         Text("未承認の候補はありません。")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
-                    ForEach(model.proposedCards) { card in
+                    ForEach(model.cardsForSelectedReport) { card in
                         ProposedCardRow(
                             card: card,
                             onApprove: { model.approve(card) },

@@ -4,6 +4,7 @@ import SwiftUI
 struct MenuView: View {
     @EnvironmentObject private var coordinator: AppCoordinator
     @EnvironmentObject private var permission: AccessibilityPermission
+    @EnvironmentObject private var unread: UnreadReportTracker
 
     var body: some View {
         if permission.isTrusted {
@@ -37,7 +38,12 @@ struct MenuView: View {
         Button {
             coordinator.openReport()
         } label: {
-            Label("週次レポート…", systemImage: "chart.line.uptrend.xyaxis")
+            // メニュー項目には`.badge()`が効かない（List専用）ので、
+            // 未読は文字列で示す
+            Label(
+                unread.hasUnreadReport ? "週次レポート… ●" : "週次レポート…",
+                systemImage: "chart.line.uptrend.xyaxis"
+            )
         }
         .keyboardShortcut("r")
         Button {

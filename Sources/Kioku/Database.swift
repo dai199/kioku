@@ -46,6 +46,8 @@ struct SRSCard: Codable, Identifiable, Sendable,
     var id: Int64?
     var createdAt: Date
     var logId: Int64?
+    /// 提案元の週次レポート（手動追加カードはnil）
+    var reportId: Int64?
     var front: String   // 日本語（意味・言いたいこと）
     var back: String    // 英文
     var reason: String? // AIの選定理由
@@ -206,6 +208,44 @@ final class DatabaseManager: Sendable {
                 t.column("promptVersion", .text)
             }
         }
+        migrator.registerMigration("v4") { db in
+            // カードを提案元のレポートに紐づける（過去レポートを開いたとき、
+            // その週に提案されたカードだけを出せるようにする）
+            try db.alter(table: SRSCard.databaseTableName) { t in
+                t.add(column: "reportId", .integer)
+                    .references(WeeklyReportRecord.databaseTableName, onDelete: .setNull)
+            }
+            try db.create(
+                index: "srsCard_on_reportId",
+                on: SRSCard.databaseTableName,
+                columns: ["reportId"]
+            )
+            // 既存カードは生成時刻がいちばん近いレポートに割り当てる
+            // （カードはレポートと同じトランザクションで作られるため実質同時刻）。
+            // 外側の列はサブクエリのWHEREでしか参照できないので、
+            // 「直前のレポート」→「直後のレポート」の2段で埋める
+            let card = SRSCard.databaseTableName
+            let report = WeeklyReportRecord.databaseTableName
+            let aiSuggested = SRSCard.Origin.aiSuggested.rawValue
+            try db.execute(sql: """
+                UPDATE \(card) SET reportId = (
+                    SELECT w.id FROM \(report) w
+                    WHERE julianday(w.generatedAt) <= julianday(\(card).createdAt) + 0.0001
+                    ORDER BY w.generatedAt DESC
+                    LIMIT 1
+                )
+                WHERE origin = '\(aiSuggested)'
+                """)
+            try db.execute(sql: """
+                UPDATE \(card) SET reportId = (
+                    SELECT w.id FROM \(report) w
+                    WHERE julianday(w.generatedAt) > julianday(\(card).createdAt)
+                    ORDER BY w.generatedAt ASC
+                    LIMIT 1
+                )
+                WHERE reportId IS NULL AND origin = '\(aiSuggested)'
+                """)
+        }
         return migrator
     }
 
@@ -246,13 +286,14 @@ final class DatabaseManager: Sendable {
         }
     }
 
-    /// レポートと提案カードをまとめて保存する。
+    /// レポートと提案カードをまとめて保存する。カードは提案元のレポートに紐づける。
     func saveReport(_ report: WeeklyReportRecord, proposedCards: [SRSCard]) async throws {
         try await dbQueue.write { db in
             var report = report
             try report.insert(db)
             for card in proposedCards {
                 var card = card
+                card.reportId = report.id
                 try card.insert(db)
             }
         }

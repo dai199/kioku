@@ -88,6 +88,7 @@ final class ReportManager: ObservableObject {
                         id: nil,
                         createdAt: now,
                         logId: proposal.logId,
+                        reportId: nil,  // 保存時にレポートのidが入る
                         front: proposal.front,
                         back: proposal.back,
                         reason: proposal.reason,
@@ -142,9 +143,11 @@ final class ReportManager: ObservableObject {
         let content = UNMutableNotificationContent()
         content.title = "今週の学習レポートができました"
         content.body = cardCount > 0
-            ? "覚える価値の高い表現を\(cardCount)件提案しています。メニューバーのKiokuから開けます。"
-            : "今週の振り返りができました。メニューバーのKiokuから開けます。"
+            ? "覚える価値の高い表現を\(cardCount)件提案しています。タップして開きます。"
+            : "今週の振り返りができました。タップして開きます。"
         content.sound = .default
+        // タップでレポート画面を開く（NotificationRouter）
+        content.userInfo = [NotificationRouter.sectionKey: MainSection.report.rawValue]
 
         try? await center.add(UNNotificationRequest(
             identifier: UUID().uuidString,

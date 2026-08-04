@@ -6,6 +6,7 @@ import Combine
 final class AppCoordinator: ObservableObject {
     let permission = AccessibilityPermission()
     let settings = AppSettings()
+    let unread = UnreadReportTracker()
 
     @Published var isMonitoringEnabled = true {
         didSet { updateMonitorState() }
@@ -16,7 +17,10 @@ final class AppCoordinator: ObservableObject {
     private let popup = PopupController()
     private lazy var settingsWindow = SettingsWindowController(settings: settings)
     private lazy var reportManager = ReportManager(settings: settings)
-    private lazy var mainWindow = MainWindowController(reportManager: reportManager)
+    private lazy var mainWindow = MainWindowController(
+        reportManager: reportManager, unread: unread
+    )
+    private var notificationRouter: NotificationRouter?
     private let translationCache = TranslationCache()
     private var currentEvent: SelectionEvent?
     /// スペース復帰時の再表示判定に使う「最近認識した選択」（AX要素は持たない軽量記録）
@@ -67,6 +71,8 @@ final class AppCoordinator: ObservableObject {
         }
 
         reportManager.startAutoCheck()
+        // 通知タップで該当画面を開けるようにする（配信より前にデリゲートを立てる）
+        notificationRouter = NotificationRouter(coordinator: self)
     }
 
     private func updateMonitorState() {
@@ -129,15 +135,19 @@ final class AppCoordinator: ObservableObject {
         settingsWindow.show()
     }
 
+    func open(_ section: MainSection) {
+        mainWindow.show(section)
+    }
+
     func openHistory() {
-        mainWindow.show(.history)
+        open(.history)
     }
 
     func openReport() {
-        mainWindow.show(.report)
+        open(.report)
     }
 
     func openReview() {
-        mainWindow.show(.review)
+        open(.review)
     }
 }

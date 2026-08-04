@@ -7,7 +7,14 @@ import AppKit
 enum BrandIcon {
     /// メニューバー・フローティングアイコン用テンプレート画像。
     /// 塗りつぶした吹き出しから「K」を抜いたシルエット。
-    static let template: NSImage = {
+    static let template: NSImage = makeTemplate(badged: false)
+
+    /// 未読があるときのメニューバー用。右上にドットを足す。
+    /// 色はOSに任せる原則を守るため、赤ではなくテンプレートのまま
+    /// 「透明な隙間で切り離したドット」として描く（DESIGN.md）。
+    static let templateWithBadge: NSImage = makeTemplate(badged: true)
+
+    private static func makeTemplate(badged: Bool) -> NSImage {
         let size: CGFloat = 18
         let image = NSImage(size: NSSize(width: size, height: size), flipped: false) { _ in
             // 吹き出し本体＋左下のしっぽ
@@ -37,9 +44,26 @@ enum BrandIcon {
                 y: 4 + (13 - textSize.height) / 2
             ))
             context?.compositingOperation = .sourceOver
+
+            if badged {
+                let center = NSPoint(x: 14.5, y: 14.5)
+                let radius: CGFloat = 3
+                let gap: CGFloat = 1.2
+                // 吹き出しから切り離すため、ドットの周りを一度くり抜く
+                context?.compositingOperation = .destinationOut
+                NSBezierPath(ovalIn: NSRect(
+                    x: center.x - radius - gap, y: center.y - radius - gap,
+                    width: (radius + gap) * 2, height: (radius + gap) * 2
+                )).fill()
+                context?.compositingOperation = .sourceOver
+                NSBezierPath(ovalIn: NSRect(
+                    x: center.x - radius, y: center.y - radius,
+                    width: radius * 2, height: radius * 2
+                )).fill()
+            }
             return true
         }
         image.isTemplate = true
         return image
-    }()
+    }
 }
