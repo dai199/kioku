@@ -29,6 +29,9 @@ final class TranslationSession: ObservableObject {
 
     @Published private(set) var phase: Phase = .loading
     @Published private(set) var cardState: CardState = .notAdded
+    /// 今の生成を開始した時刻。待ち時間を画面に出すために使う
+    /// （応答に15秒以上かかることがあり、進行中か固まったか区別できないため）
+    @Published private(set) var startedAt = Date()
 
     let event: SelectionEvent
     private(set) var sourceLanguage: String
@@ -38,6 +41,10 @@ final class TranslationSession: ObservableObject {
     private var previousCandidates: [String] = []
     /// 提示した全候補（提示順）。選好シグナルとして記録する
     private var candidates: [String] = []
+    /// ユーザーが明示した方向（要求順）。スタイル適応の学習データ
+    private var requestedDirections: [StyleDirection] = []
+    /// 次の生成に適用する方向。再試行でも保つ（同じ方向でやり直したいはずなので）
+    private var pendingDirection: StyleDirection?
     private var adoptedIndex: Int?
     private var adoptedVia: AdoptionMethod?
     private var finalized = false
@@ -68,9 +75,15 @@ final class TranslationSession: ObservableObject {
     }
 
     /// 現在の訳を却下して別の訳を生成する。
-    func regenerate() {
+    /// `direction` を渡すと「もっとカジュアルに」等の方向を指定できる。
+    /// 方向はユーザーが明示した事実なので、シグナルとして必ず残す（SPEC §11）。
+    func regenerate(direction: StyleDirection? = nil) {
         guard case .done(let current) = phase else { return }
         previousCandidates.append(current)
+        pendingDirection = direction
+        if let direction {
+            requestedDirections.append(direction)
+        }
         cardState = .notAdded
         runTranslation()
     }
@@ -102,6 +115,8 @@ final class TranslationSession: ObservableObject {
         swap(&sourceLanguage, &targetLanguage)
         previousCandidates = []
         candidates = []
+        requestedDirections = []
+        pendingDirection = nil
         adoptedIndex = nil
         adoptedVia = nil
         cardState = .notAdded
@@ -136,6 +151,10 @@ final class TranslationSession: ObservableObject {
 
         let candidatesJSON = (try? JSONEncoder().encode(candidates))
             .flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
+        // 方向指定が一度もなければNULL（「素の再生成しかしていない」と区別する）
+        let directionsJSON = requestedDirections.isEmpty ? nil
+            : (try? JSONEncoder().encode(requestedDirections.map(\.rawValue)))
+                .flatMap { String(data: $0, encoding: .utf8) }
         let direction: TranslationLog.Direction = sourceLanguage == "ja" ? .writing : .reading
         let record = TranslationSessionRecord(
             id: nil,
@@ -148,6 +167,7 @@ final class TranslationSession: ObservableObject {
             adoptedIndex: adoptedIndex,
             adoptedVia: adoptedVia?.rawValue,
             regenerationCount: candidates.count - 1,
+            styleDirectionsJSON: directionsJSON,
             sourceApp: event.appName,
             promptVersion: GeminiEngine.promptVersion
         )
@@ -189,6 +209,7 @@ final class TranslationSession: ObservableObject {
         }
 
         phase = .loading
+        startedAt = Date()
         translationLogger.log(
             """
             翻訳開始 \(self.sourceLanguage, privacy: .public)→\
@@ -203,7 +224,8 @@ final class TranslationSession: ObservableObject {
                     text: event.text,
                     sourceLanguage: sourceLanguage,
                     targetLanguage: targetLanguage,
-                    alternativesToAvoid: previousCandidates
+                    alternativesToAvoid: previousCandidates,
+                    styleDirection: pendingDirection
                 ))
                 var accumulated = ""
                 for try await piece in stream {

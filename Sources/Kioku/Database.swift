@@ -101,6 +101,9 @@ struct TranslationSessionRecord: Codable, Identifiable, Sendable,
     /// 採用方法: replace | copy（未採用ならnil）
     var adoptedVia: String?
     var regenerationCount: Int
+    /// 「もっとカジュアルに」等、ユーザーが明示した方向の履歴（提示順）のJSON配列。
+    /// 推論ではなく事実なので、スタイル適応（§11）で最も信頼できるシグナル。
+    var styleDirectionsJSON: String?
     var sourceApp: String?
     /// 生成に使ったプロンプトのバージョン（§12: どの変更が効いたか追跡する）
     var promptVersion: String?
@@ -245,6 +248,12 @@ final class DatabaseManager: Sendable {
                 )
                 WHERE reportId IS NULL AND origin = '\(aiSuggested)'
                 """)
+        }
+        migrator.registerMigration("v5") { db in
+            // 方向つき再生成（SPEC §11）。既存行は方向指定のない再生成なのでNULLのまま
+            try db.alter(table: TranslationSessionRecord.databaseTableName) { t in
+                t.add(column: "styleDirectionsJSON", .text)
+            }
         }
         return migrator
     }

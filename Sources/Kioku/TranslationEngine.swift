@@ -8,6 +8,8 @@ struct TranslationRequest: Sendable {
     let targetLanguage: String
     /// 「別の訳」再生成時、既に提示した訳（これらとは違う訳を返してもらう）
     var alternativesToAvoid: [String] = []
+    /// 「もっとカジュアルに」のような方向指定（指定なしの再生成ではnil）
+    var styleDirection: StyleDirection?
 }
 
 /// 翻訳エンジンの抽象化。将来Apple Translation（オフライン）や

@@ -173,6 +173,19 @@ struct PopupView: View {
         }
     }
 
+    /// 待ち時間の表示。応答に15秒以上かかることがあり、その間に
+    /// 「進んでいるのか固まったのか」が分からないのがいちばん困る。
+    /// 数字が増えていれば生きていると分かるので、5秒を過ぎたら経過を出す。
+    private func elapsedLabel(prefix: String, font: Font = .callout) -> some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let elapsed = Int(context.date.timeIntervalSince(session.startedAt))
+            Text(elapsed >= 5 ? "\(prefix)… \(elapsed)秒" : "\(prefix)…")
+                .font(font)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+        }
+    }
+
     /// 「覚える」ボタンのツールチップ。アイコンのみなので、
     /// 何が起きたか（起きるか）はここで伝える。
     private var cardHelp: String {
@@ -296,9 +309,7 @@ struct PopupView: View {
         case .loading:
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small)
-                Text("翻訳中…")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                elapsedLabel(prefix: "翻訳中")
             }
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .center)
@@ -311,9 +322,7 @@ struct PopupView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.mini)
-                    Text("生成中…")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                    elapsedLabel(prefix: "生成中", font: .caption2)
                     Spacer()
                 }
             }
@@ -358,13 +367,23 @@ struct PopupView: View {
                         .controlSize(.small)
                         .buttonStyle(.borderedProminent)
                     }
-                    Button {
-                        session.regenerate()
+                    // 素の再生成は「なぜ却下したか」が残らない。方向を選べるようにして、
+                    // 却下理由を推論せず事実として受け取る（SPEC §11）
+                    Menu {
+                        ForEach(StyleDirection.allCases, id: \.self) { direction in
+                            Button(direction.label) {
+                                session.regenerate(direction: direction)
+                            }
+                        }
                     } label: {
                         Label("別の訳", systemImage: "arrow.clockwise")
+                    } primaryAction: {
+                        session.regenerate()
                     }
+                    .menuStyle(.button)
                     .controlSize(.small)
-                    .help("違う言い回しを提案してもらう")
+                    .fixedSize()
+                    .help("違う言い回しを提案してもらう（▾で方向を指定）")
                     Button {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(translation, forType: .string)

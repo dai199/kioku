@@ -157,12 +157,16 @@ struct GeminiClient: Sendable {
 struct GeminiEngine: TranslationEngine {
     /// 翻訳プロンプトのバージョン。プロンプトを変更したら必ず上げる
     /// （選好シグナルと突き合わせて、どの変更が品質に効いたか追跡するため）。
-    static let promptVersion = "2026-07-06.1"
+    static let promptVersion = "2026-08-05.1"
 
-    /// 翻訳のタイムアウト。選択してすぐ答えが欲しいポップアップで、
-    /// 通信が固まったまま何十秒も「翻訳中…」を見せないための上限。
-    /// 早く失敗させて「再試行」で作り直せるほうが、待たせ続けるより体験がよい。
-    static let timeout: TimeInterval = 20
+    /// 翻訳のタイムアウト。「本当に固まった通信」を諦めるための上限であって、
+    /// 遅い応答を打ち切るためのものではない。
+    ///
+    /// 一度20秒まで下げたが、実測では応答に15〜20秒かかることがあり
+    /// （通信経路は健全で、API側の生成待ち）、正常な翻訳まで巻き込んで失敗した。
+    /// 待たせること自体は問題ではなく、進行中か固まったか分からないことが問題なので、
+    /// 上限は余裕を持たせ、経過秒数の表示（PopupView）で見えるようにしている。
+    static let timeout: TimeInterval = 60
 
     let apiKey: String
     let model: String
@@ -186,7 +190,7 @@ struct GeminiEngine: TranslationEngine {
         )
     }
 
-    private func prompt(for request: TranslationRequest) -> String {
+    func prompt(for request: TranslationRequest) -> String {
         let names = ["en": "English", "ja": "Japanese"]
         let source = names[request.sourceLanguage] ?? request.sourceLanguage
         let target = names[request.targetLanguage] ?? request.targetLanguage
@@ -206,6 +210,10 @@ struct GeminiEngine: TranslationEngine {
             Provide a clearly different but equally natural alternative:
             \(previous)
             """
+        }
+        // 方向指定はユーザーの明示的な要求なので、最後に置いて最も強く効かせる
+        if let direction = request.styleDirection {
+            instruction += "\n\n" + direction.instruction
         }
         return instruction + "\n\n" + request.text
     }
