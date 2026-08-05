@@ -17,6 +17,7 @@ final class AppCoordinator: ObservableObject {
     private let popup = PopupController()
     private lazy var settingsWindow = SettingsWindowController(settings: settings)
     private lazy var reportManager = ReportManager(settings: settings)
+    private lazy var reviewReminder = ReviewReminder(settings: settings)
     private lazy var mainWindow = MainWindowController(
         reportManager: reportManager, unread: unread
     )
@@ -71,6 +72,7 @@ final class AppCoordinator: ObservableObject {
         }
 
         reportManager.startAutoCheck()
+        reviewReminder.start()
         // 通知タップで該当画面を開けるようにする（配信より前にデリゲートを立てる）
         notificationRouter = NotificationRouter(coordinator: self)
     }
@@ -86,6 +88,12 @@ final class AppCoordinator: ObservableObject {
     }
 
     private func handleSelection(_ event: SelectionEvent) {
+        // 除外アプリ（パスワードマネージャー等）では何も出さず、覚えもしない。
+        // SPEC §5: アイコンを出さない＝ユーザーが送信操作をする余地自体を作らない
+        guard !settings.isExcluded(bundleID: event.bundleID) else {
+            floatingIcon.hide()
+            return
+        }
         currentEvent = event
         rememberSelection(event)
         // 選択範囲の右上に出す（AX座標→ドラッグ2点からの推定→マウス位置の順）

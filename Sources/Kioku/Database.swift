@@ -367,6 +367,16 @@ final class DatabaseManager: Sendable {
         }
     }
 
+    /// 出題期限が来ているカードの枚数（復習リマインダーの本文に使う）。
+    func dueCardCount(asOf date: Date) async throws -> Int {
+        try await dbQueue.read { db in
+            try SRSCard
+                .filter(Column("status") == SRSCard.Status.active.rawValue)
+                .filter(Column("dueDate") == nil || Column("dueDate") <= date)
+                .fetchCount(db)
+        }
+    }
+
     /// 指定日時以降に行った復習の回数（1日の上限管理に使う）。
     func reviewCount(since date: Date) async throws -> Int {
         try await dbQueue.read { db in
