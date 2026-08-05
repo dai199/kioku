@@ -24,8 +24,14 @@ enum GeminiError: LocalizedError {
 
 /// Gemini API（generateContent）の薄いクライアント。翻訳と週次分析の双方から使う。
 struct GeminiClient: Sendable {
+    /// 週次分析など、時間がかかってよい呼び出しの既定値
+    static let defaultTimeout: TimeInterval = 90
+
     let apiKey: String
     let model: String
+    /// リクエストのタイムアウト。ストリーミングでは「データが来ない時間」の上限として効く。
+    /// 用途で大きく変わるので呼び出し側が決める（翻訳は短く、週次分析は長く）。
+    var timeout: TimeInterval = defaultTimeout
 
     func generateText(
         prompt: String,
@@ -41,7 +47,7 @@ struct GeminiClient: Sendable {
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
-        urlRequest.timeoutInterval = 90
+        urlRequest.timeoutInterval = timeout
 
         let body = GenerateContentRequest(
             contents: [.init(parts: [.init(text: prompt)])],
@@ -89,7 +95,7 @@ struct GeminiClient: Sendable {
                     urlRequest.httpMethod = "POST"
                     urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
                     urlRequest.setValue(client.apiKey, forHTTPHeaderField: "x-goog-api-key")
-                    urlRequest.timeoutInterval = 90
+                    urlRequest.timeoutInterval = client.timeout
                     let body = GenerateContentRequest(
                         contents: [.init(parts: [.init(text: prompt)])],
                         generationConfig: .init(temperature: temperature, responseMimeType: nil)
@@ -153,11 +159,20 @@ struct GeminiEngine: TranslationEngine {
     /// （選好シグナルと突き合わせて、どの変更が品質に効いたか追跡するため）。
     static let promptVersion = "2026-07-06.1"
 
+    /// 翻訳のタイムアウト。選択してすぐ答えが欲しいポップアップで、
+    /// 通信が固まったまま何十秒も「翻訳中…」を見せないための上限。
+    /// 早く失敗させて「再試行」で作り直せるほうが、待たせ続けるより体験がよい。
+    static let timeout: TimeInterval = 20
+
     let apiKey: String
     let model: String
 
+    private var client: GeminiClient {
+        GeminiClient(apiKey: apiKey, model: model, timeout: Self.timeout)
+    }
+
     func translate(_ request: TranslationRequest) async throws -> String {
-        try await GeminiClient(apiKey: apiKey, model: model).generateText(
+        try await client.generateText(
             prompt: prompt(for: request),
             // 再生成時はバリエーションを出したいので温度を上げる
             temperature: request.alternativesToAvoid.isEmpty ? 0.2 : 0.9
@@ -165,7 +180,7 @@ struct GeminiEngine: TranslationEngine {
     }
 
     func translateStream(_ request: TranslationRequest) -> AsyncThrowingStream<String, Error> {
-        GeminiClient(apiKey: apiKey, model: model).streamText(
+        client.streamText(
             prompt: prompt(for: request),
             temperature: request.alternativesToAvoid.isEmpty ? 0.2 : 0.9
         )

@@ -108,6 +108,12 @@ final class TranslationSession: ObservableObject {
         runTranslation()
     }
 
+    /// 失敗した翻訳をやり直す。タイムアウトや一時的な通信断から戻るための操作。
+    func retry() {
+        guard case .failed = phase else { return }
+        runTranslation()
+    }
+
     func cancel() {
         task?.cancel()
     }

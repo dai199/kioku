@@ -402,12 +402,21 @@ struct PopupView: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .lineLimit(3)
-                if missingAPIKey {
-                    Button("設定を開く…") {
-                        onOpenSettings()
-                        onClose()
+                HStack(spacing: 10) {
+                    if missingAPIKey {
+                        Button("設定を開く…") {
+                            onOpenSettings()
+                            onClose()
+                        }
+                        .controlSize(.small)
+                    } else {
+                        // タイムアウトや一時的な通信断はやり直せば通ることが多い。
+                        // 選択し直しを強いない
+                        Button("再試行") { session.retry() }
+                            .controlSize(.small)
+                            .buttonStyle(.borderedProminent)
                     }
-                    .controlSize(.small)
+                    Spacer()
                 }
             }
         }
