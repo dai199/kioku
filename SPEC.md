@@ -180,8 +180,14 @@ WeeklyReport
    - 今日のぶんを終えている／期限カードが0枚なら黙る。朝を逃してもその日のうちに1回鳴る
    - 時刻を設定可能にするかは使ってみてから判断する（現状は8時固定・オン/オフのみ設定可）
 8. ✅ **週次レポートの過去一覧**: 生成履歴を遡って閲覧（ツールバーの週メニュー＋週送り）
-9. ✅ **ユニットテスト**: `Tests/KiokuTests`（`make test`）。SelectionFilter・LanguageDetector・ReviewScheduler・WeeklyAnalyzerのJSON抽出をカバー
-   - AX API・ネットワーク・DBに触れる層は未カバー。次に伸ばすならDB層（マイグレーションと`dueCards`の境界）
+9. ✅ **ユニットテスト**: `Tests/KiokuTests`（`make test`）
+   - 純粋ロジック: SelectionFilter・LanguageDetector・ReviewScheduler・
+     WeeklyAnalyzerのJSON抽出・CardContent・翻訳プロンプト組み立て・
+     翻訳キャッシュのキー分離・復習リマインダーの発火判定
+   - DB層（2026-08-07追加）: マイグレーション（空DBからの適用・二重適用・
+     v4バックフィル）と、`dueCards` / `dueCardCount` / `addManualCard` /
+     `applyReview` / `saveReport` の境界。すべてインメモリDBで実データに触れない
+   - 未カバー: AX API とネットワーク（どちらも外部環境に依存する層）
 10. **ブラウザURL出典の正確な取得**: AppleScript連携（Chrome/Safari）でページURLを記録
 11. **自動起動（ログイン項目）・履歴エクスポート（CSV/Anki）** ／ アプリ除外リストは ✅
     - ✅ **アプリ除外リスト**: 設定画面から.appを選んで追加する（バンドルIDの手入力はさせない）。

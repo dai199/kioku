@@ -135,6 +135,13 @@ final class DatabaseManager: Sendable {
 
     let dbQueue: DatabaseQueue
 
+    /// 任意のキューで作る。テストがインメモリDB（`DatabaseQueue()`）を渡すための口で、
+    /// これがないと実DB（アプリサポート配下）に触れずにテストできない。
+    init(dbQueue: DatabaseQueue) throws {
+        self.dbQueue = dbQueue
+        try Self.migrator.migrate(dbQueue)
+    }
+
     private init() {
         let directory = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -146,7 +153,9 @@ final class DatabaseManager: Sendable {
         try! Self.migrator.migrate(dbQueue)
     }
 
-    private static var migrator: DatabaseMigrator {
+    /// 段階的に適用してバックフィルを検証できるよう、テストから見える所に置く。
+    /// **既存の registerMigration は書き換えないこと**（適用済みのDBが壊れる）。
+    static var migrator: DatabaseMigrator {
         var migrator = DatabaseMigrator()
         migrator.registerMigration("v1") { db in
             try db.create(table: TranslationLog.databaseTableName) { t in
