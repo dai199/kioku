@@ -367,23 +367,37 @@ struct PopupView: View {
                         .controlSize(.small)
                         .buttonStyle(.borderedProminent)
                     }
-                    // 素の再生成は「なぜ却下したか」が残らない。方向を選べるようにして、
-                    // 却下理由を推論せず事実として受け取る（SPEC §11）
-                    Menu {
-                        ForEach(StyleDirection.allCases, id: \.self) { direction in
-                            Button(direction.label) {
-                                session.regenerate(direction: direction)
+                    // エンジンによっては再生成そのものが成立しない（決定的な出力を返す）。
+                    // できない操作を出して黙って無視されるより、出さないほうがよい
+                    if session.capabilities.canRegenerate {
+                        if session.capabilities.canDirectStyle {
+                            // 素の再生成は「なぜ却下したか」が残らない。方向を選べるようにして、
+                            // 却下理由を推論せず事実として受け取る（SPEC §11）
+                            Menu {
+                                ForEach(StyleDirection.allCases, id: \.self) { direction in
+                                    Button(direction.label) {
+                                        session.regenerate(direction: direction)
+                                    }
+                                }
+                            } label: {
+                                Label("別の訳", systemImage: "arrow.clockwise")
+                            } primaryAction: {
+                                session.regenerate()
                             }
+                            .menuStyle(.button)
+                            .controlSize(.small)
+                            .fixedSize()
+                            .help("違う言い回しを提案してもらう（▾で方向を指定）")
+                        } else {
+                            Button {
+                                session.regenerate()
+                            } label: {
+                                Label("別の訳", systemImage: "arrow.clockwise")
+                            }
+                            .controlSize(.small)
+                            .help("違う言い回しを提案してもらう")
                         }
-                    } label: {
-                        Label("別の訳", systemImage: "arrow.clockwise")
-                    } primaryAction: {
-                        session.regenerate()
                     }
-                    .menuStyle(.button)
-                    .controlSize(.small)
-                    .fixedSize()
-                    .help("違う言い回しを提案してもらう（▾で方向を指定）")
                     Button {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(translation, forType: .string)

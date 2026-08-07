@@ -2,23 +2,28 @@ import Foundation
 
 /// 翻訳結果のインメモリキャッシュ（LRU）。
 /// 同じテキストを選択し直したときにAPIを呼ばず即表示する。
-/// プロンプトバージョンをキーに含めるので、プロンプト変更後は自然に無効化される。
+///
+/// キーにエンジンの版（`TranslationEngine.promptVersion`）を含めるので、
+/// プロンプト変更後もエンジン切り替え後も自然に無効化される。
+/// 含めないと、Apple Translationに切り替えたのにGeminiの訳が返る、といった事故になる。
 @MainActor
 final class TranslationCache {
     private let capacity = 300
     private var storage: [String: String] = [:]
     private var order: [String] = []
 
-    func lookup(text: String, source: String, target: String) -> String? {
-        let key = Self.key(text, source, target)
+    func lookup(text: String, source: String, target: String, version: String) -> String? {
+        let key = Self.key(text, source, target, version)
         guard let value = storage[key] else { return nil }
         order.removeAll { $0 == key }
         order.append(key)
         return value
     }
 
-    func store(_ translation: String, text: String, source: String, target: String) {
-        let key = Self.key(text, source, target)
+    func store(
+        _ translation: String, text: String, source: String, target: String, version: String
+    ) {
+        let key = Self.key(text, source, target, version)
         if storage[key] == nil {
             order.append(key)
         }
@@ -28,7 +33,9 @@ final class TranslationCache {
         }
     }
 
-    private static func key(_ text: String, _ source: String, _ target: String) -> String {
-        "\(source)>\(target)|\(GeminiEngine.promptVersion)|\(text)"
+    private static func key(
+        _ text: String, _ source: String, _ target: String, _ version: String
+    ) -> String {
+        "\(source)>\(target)|\(version)|\(text)"
     }
 }

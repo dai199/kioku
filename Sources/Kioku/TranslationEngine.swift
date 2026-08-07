@@ -12,9 +12,40 @@ struct TranslationRequest: Sendable {
     var styleDirection: StyleDirection?
 }
 
+/// エンジンが応えられる操作。
+///
+/// エンジンによって能力は決定的に違う。Apple Translationはプロンプトを
+/// 受け取る口がないので方向指定を解釈できず、出力も決定的なので
+/// 「別の訳」も成立しない。**できない操作をUIに出して黙って無視されるのが最悪**なので、
+/// 画面はこれを見てボタンを出し分ける。
+struct EngineCapabilities: Sendable {
+    /// 「別の訳」で違う候補を出せるか（決定的なエンジンは不可）
+    var canRegenerate: Bool
+    /// 「もっとカジュアルに」等の方向指定を解釈できるか
+    var canDirectStyle: Bool
+
+    /// プロンプトを自由に組み立てられるLLM向け
+    static let full = EngineCapabilities(canRegenerate: true, canDirectStyle: true)
+    /// 原文を渡して訳を受け取るだけのエンジン向け
+    static let translateOnly = EngineCapabilities(canRegenerate: false, canDirectStyle: false)
+}
+
 /// 翻訳エンジンの抽象化。将来Apple Translation（オフライン）や
 /// オンデバイスLLMへ差し替え・併用できるようにしておく。
 protocol TranslationEngine: Sendable {
+    /// エンジンと生成条件を一意に表す識別子。翻訳キャッシュのキーと、
+    /// 選好シグナル（`translationSession.promptVersion`）の記録に使う。
+    ///
+    /// **エンジンをまたいで衝突しないこと**（例: `gemini/2026-08-05.1`、`apple/1`）。
+    /// 衝突すると、エンジンを切り替えても前のエンジンの訳がキャッシュから返る。
+    /// プロンプトを持つエンジンはプロンプトを変えたら必ず上げる
+    /// （どの変更が品質に効いたかを後から追うため）。
+    var promptVersion: String { get }
+
+    /// 応えられる操作。既定値は置かない — 新しいエンジンを足すとき、
+    /// 何ができて何ができないかを必ず考えさせるため
+    var capabilities: EngineCapabilities { get }
+
     func translate(_ request: TranslationRequest) async throws -> String
     /// 逐次テキスト片を返すストリーミング翻訳。
     func translateStream(_ request: TranslationRequest) -> AsyncThrowingStream<String, Error>

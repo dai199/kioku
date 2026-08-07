@@ -39,7 +39,12 @@ KiokuApp (MenuBarExtra, LSUIElement)
 
 - **翻訳エンジンは `TranslationEngine` 越しに使う**。`GeminiEngine` を直に参照しない
   （Apple Translationやオンデバイスへの差し替え口）。プロンプトを変えたら
-  `GeminiEngine.promptVersion` を必ず上げる — 選好シグナルと突き合わせて効果を追うため
+  そのエンジンの `promptVersion` を必ず上げる — 選好シグナルと突き合わせて効果を追うため。
+  版はエンジン名で修飾する（`gemini/…`）。キャッシュキーに入るので、
+  衝突するとエンジンを切り替えても前のエンジンの訳が返る
+- **エンジンを足すときは `capabilities` を必ず考える**。Apple Translationのように
+  方向指定も再生成もできないエンジンがある。画面は能力を見て操作を出し分ける
+  （できない操作を出して黙って無視されるのが最悪）
 - **ポップアップはフォーカスを奪わない**（nonactivating）。日→英の本文置換が成り立つ前提条件。
   クリックは `Button` で実装する（`onTapGesture` は非キーウィンドウで取りこぼす）
 - **DBスキーマの変更はマイグレーション追加のみ**。既存の `registerMigration` は書き換えない

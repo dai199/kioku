@@ -157,7 +157,11 @@ struct GeminiClient: Sendable {
 struct GeminiEngine: TranslationEngine {
     /// 翻訳プロンプトのバージョン。プロンプトを変更したら必ず上げる
     /// （選好シグナルと突き合わせて、どの変更が品質に効いたか追跡するため）。
-    static let promptVersion = "2026-08-05.1"
+    /// 先頭のエンジン名は、他エンジンとキャッシュキーが衝突しないようにするためのもの。
+    let promptVersion = "gemini/2026-08-05.1"
+
+    /// プロンプトを自由に組み立てられるので全操作に応えられる
+    let capabilities = EngineCapabilities.full
 
     /// 翻訳のタイムアウト。「本当に固まった通信」を諦めるための上限であって、
     /// 遅い応答を打ち切るためのものではない。

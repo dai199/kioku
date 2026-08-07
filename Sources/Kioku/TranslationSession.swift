@@ -37,6 +37,10 @@ final class TranslationSession: ObservableObject {
     private(set) var sourceLanguage: String
     private(set) var targetLanguage: String
 
+    /// 使っているエンジンが応えられる操作。ポップアップはこれを見て
+    /// 「別の訳」「方向指定」を出し分ける
+    var capabilities: EngineCapabilities { engine.capabilities }
+
     /// 既に提示した訳（再生成で避けるため保持）
     private var previousCandidates: [String] = []
     /// 提示した全候補（提示順）。選好シグナルとして記録する
@@ -169,7 +173,7 @@ final class TranslationSession: ObservableObject {
             regenerationCount: candidates.count - 1,
             styleDirectionsJSON: directionsJSON,
             sourceApp: event.appName,
-            promptVersion: GeminiEngine.promptVersion
+            promptVersion: engine.promptVersion
         )
         let store = self.store
         Task {
@@ -201,7 +205,10 @@ final class TranslationSession: ObservableObject {
 
         // 初回のみキャッシュを見る（再生成はバリエーション目的なので対象外）
         if previousCandidates.isEmpty,
-           let cached = cache?.lookup(text: event.text, source: sourceLanguage, target: targetLanguage) {
+           let cached = cache?.lookup(
+               text: event.text, source: sourceLanguage, target: targetLanguage,
+               version: engine.promptVersion
+           ) {
             phase = .done(cached)
             candidates.append(cached)
             logReadingIfNeeded(cached)
@@ -249,7 +256,10 @@ final class TranslationSession: ObservableObject {
                 translationLogger.log("翻訳完了 文字数=\(translated.count, privacy: .public)")
                 candidates.append(translated)
                 if previousCandidates.isEmpty {
-                    cache?.store(translated, text: event.text, source: sourceLanguage, target: targetLanguage)
+                    cache?.store(
+                        translated, text: event.text, source: sourceLanguage,
+                        target: targetLanguage, version: engine.promptVersion
+                    )
                 }
                 logReadingIfNeeded(translated)
             } catch GeminiError.missingAPIKey {
