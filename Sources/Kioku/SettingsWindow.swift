@@ -34,11 +34,14 @@ final class SettingsWindowController {
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
 
+    /// 所要時間も持つ。キーを差し替えて押せば無料枠と有料枠の速度差が比べられる
+    /// （無料枠は応答に15〜20秒かかることがある）。失敗時も、即座の拒否か
+    /// タイムアウトかで原因が変わるので測る。
     private enum TestPhase {
         case idle
         case running
-        case success(String)
-        case failure(String)
+        case success(String, duration: TimeInterval)
+        case failure(String, duration: TimeInterval)
     }
 
     @State private var testPhase: TestPhase = .idle
@@ -83,16 +86,27 @@ struct SettingsView: View {
                 EmptyView()
             case .running:
                 ProgressView().controlSize(.small)
-            case .success(let translation):
+            case .success(let translation, let duration):
                 Label(translation, systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
                     .lineLimit(1)
-            case .failure(let message):
+                elapsed(duration)
+            case .failure(let message, let duration):
                 Label(message, systemImage: "xmark.circle.fill")
                     .foregroundStyle(.red)
                     .lineLimit(2)
+                elapsed(duration)
             }
         }
+    }
+
+    /// 所要時間。訳文が長くても押し出されないよう、優先度を上げて確保する
+    /// （速度を見るための表示なので、これが消えては意味がない）。
+    private func elapsed(_ duration: TimeInterval) -> some View {
+        Text(String(format: "%.1f秒", duration))
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+            .layoutPriority(1)
     }
 
     /// 除外アプリの一覧と追加/削除。
@@ -160,6 +174,7 @@ struct SettingsView: View {
     private func runTest() {
         testPhase = .running
         let engine = settings.makeEngine()
+        let startedAt = Date()
         Task { @MainActor in
             do {
                 let result = try await engine.translate(TranslationRequest(
@@ -167,9 +182,12 @@ struct SettingsView: View {
                     sourceLanguage: "en",
                     targetLanguage: "ja"
                 ))
-                testPhase = .success(result)
+                testPhase = .success(result, duration: Date().timeIntervalSince(startedAt))
             } catch {
-                testPhase = .failure(error.localizedDescription)
+                testPhase = .failure(
+                    error.localizedDescription,
+                    duration: Date().timeIntervalSince(startedAt)
+                )
             }
         }
     }
