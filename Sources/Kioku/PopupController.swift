@@ -431,10 +431,13 @@ struct PopupView: View {
 
         case .failed(let message, let missingAPIKey):
             VStack(alignment: .leading, spacing: 8) {
+                // 対処が書かれた文言もあるので切り詰めない（ポップアップは下に伸びる）。
+                // 上限だけは残す（APIの長大なエラー本文でパネルが伸びきらないように）
                 Label(message, systemImage: "exclamationmark.triangle")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                    .lineLimit(3)
+                    .lineLimit(8)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 10) {
                     if missingAPIKey {
                         Button("設定を開く…") {

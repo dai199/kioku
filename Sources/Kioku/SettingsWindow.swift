@@ -41,22 +41,48 @@ struct SettingsView: View {
         case idle
         case running
         case success(String, duration: TimeInterval)
-        case failure(String, duration: TimeInterval)
+        case failure(TestFailure)
+    }
+
+    private struct TestFailure {
+        let message: String
+        let duration: TimeInterval
+        /// システム設定の「翻訳言語」で解決できる失敗か（導線を出す）
+        let isResolvableInLanguageSettings: Bool
     }
 
     @State private var testPhase: TestPhase = .idle
 
     var body: some View {
         Form {
+            Section {
+                Picker("翻訳エンジン", selection: $settings.translationProvider) {
+                    ForEach(TranslationProvider.allCases) { provider in
+                        Text(provider.label)
+                            .tag(provider)
+                            // 動かない環境で選ばせて黙って失敗させない
+                            .disabled(!provider.isAvailable)
+                    }
+                }
+                Text(settings.translationProvider.detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                // 選択中のエンジンをそのまま試す。Apple翻訳の初回は言語データの
+                // ダウンロードが要ることがあるので、ポップアップより先にここで通しておける
+                connectionTest
+            } footer: {
+                // 選択に関わらずAPIキーが要ることを明示する。
+                // 「Apple翻訳にしたのにキーを求められる」と混乱するため
+                Text("週次レポートの分析は、この選択に関わらず常にGeminiを使います。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             Section("Gemini API（BYOK）") {
                 SecureField("APIキー", text: $settings.geminiAPIKey)
                 TextField("翻訳モデル", text: $settings.translationModel)
                 TextField("分析モデル（週次レポート用）", text: $settings.analysisModel)
                 Link("APIキーを取得（Google AI Studio）",
                      destination: URL(string: "https://aistudio.google.com/apikey")!)
-                // 上のキーとモデル設定を検証するボタンなので、必ずこのセクション内に置く。
-                // 無ラベルの別セクションにすると直前のセクションの一部に見える
-                connectionTest
             }
             Section {
                 excludedApps
@@ -76,26 +102,47 @@ struct SettingsView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    /// APIキーとモデル設定が実際に通るかを確かめる。結果は右に並べて出す。
+    /// 選択中のエンジンで実際に1文訳してみる。
+    /// 失敗の理由は行内に押し込めないので、下に折り返して全文を出す
+    /// （切り詰めると「どうすればいいか分からない」表示になる）。
     private var connectionTest: some View {
-        HStack(spacing: 12) {
-            Button("接続テスト") { runTest() }
-                .disabled(!settings.hasAPIKey || isRunning)
-            switch testPhase {
-            case .idle:
-                EmptyView()
-            case .running:
-                ProgressView().controlSize(.small)
-            case .success(let translation, let duration):
-                Label(translation, systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-                    .lineLimit(1)
-                elapsed(duration)
-            case .failure(let message, let duration):
-                Label(message, systemImage: "xmark.circle.fill")
-                    .foregroundStyle(.red)
-                    .lineLimit(2)
-                elapsed(duration)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 12) {
+                Button("翻訳テスト") { runTest() }
+                    // APIキーが要るのはGeminiのときだけ（Apple翻訳は端末内で完結する）
+                    .disabled(
+                        isRunning
+                            || (settings.translationProvider == .gemini && !settings.hasAPIKey)
+                    )
+                switch testPhase {
+                case .idle:
+                    EmptyView()
+                case .running:
+                    ProgressView().controlSize(.small)
+                case .success(let translation, let duration):
+                    Label(translation, systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .lineLimit(1)
+                    elapsed(duration)
+                case .failure(let failure):
+                    Label("失敗", systemImage: "xmark.circle.fill")
+                        .foregroundStyle(.red)
+                    elapsed(failure.duration)
+                }
+                Spacer()
+            }
+            if case .failure(let failure) = testPhase {
+                Text(failure.message)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    // 折り返して必要なだけ縦に伸ばす（切り詰めない）
+                    .fixedSize(horizontal: false, vertical: true)
+                // 手順を文章で説明するより、その場所を開けるほうが確実
+                if failure.isResolvableInLanguageSettings,
+                   let url = AppleTranslationError.languageSettingsURL {
+                    Button("「言語と地域」を開く…") { NSWorkspace.shared.open(url) }
+                        .controlSize(.small)
+                }
             }
         }
     }
@@ -184,10 +231,12 @@ struct SettingsView: View {
                 ))
                 testPhase = .success(result, duration: Date().timeIntervalSince(startedAt))
             } catch {
-                testPhase = .failure(
-                    error.localizedDescription,
-                    duration: Date().timeIntervalSince(startedAt)
-                )
+                testPhase = .failure(TestFailure(
+                    message: error.localizedDescription,
+                    duration: Date().timeIntervalSince(startedAt),
+                    isResolvableInLanguageSettings:
+                        (error as? AppleTranslationError)?.isResolvableInLanguageSettings == true
+                ))
             }
         }
     }

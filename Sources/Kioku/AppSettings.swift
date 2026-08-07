@@ -1,5 +1,43 @@
 import Foundation
 
+/// 翻訳に使うエンジン。
+/// 週次分析は常にGeminiを使うので、ここの選択は「ポップアップの翻訳」だけに効く。
+enum TranslationProvider: String, CaseIterable, Sendable, Identifiable {
+    case gemini
+    case appleOnDevice
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .gemini: "Gemini（クラウド）"
+        case .appleOnDevice: "Apple 翻訳（端末内）"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .gemini:
+            return "文脈に合わせた自然な訳。「別の訳」と方向指定が使える。APIキーが要る"
+        case .appleOnDevice:
+            return "テキストが端末から出ない。オフラインでも動き、費用もかからない。"
+                + "「別の訳」と方向指定は使えない"
+        }
+    }
+
+    /// この環境で選べるか。Apple翻訳の TranslationSession はmacOS 26.4以降。
+    /// 動かない環境で選ばせて黙って失敗させない
+    var isAvailable: Bool {
+        switch self {
+        case .gemini:
+            return true
+        case .appleOnDevice:
+            if #available(macOS 26.4, *) { return true }
+            return false
+        }
+    }
+}
+
 /// ユーザー設定。APIキーはキーチェーン、それ以外はUserDefaultsに保存する。
 @MainActor
 final class AppSettings: ObservableObject {
@@ -10,6 +48,7 @@ final class AppSettings: ObservableObject {
     private static let analysisModelKey = "analysisModel"
     private static let excludedAppsKey = "excludedAppBundleIDs"
     private static let reviewReminderKey = "reviewReminderEnabled"
+    private static let providerKey = "translationProvider"
 
     /// 初回起動時にだけ入れる除外アプリ（SPEC §5）。
     /// パスワードマネージャーは翻訳したい場面がなく、事故ったときの被害が大きい。
@@ -52,6 +91,13 @@ final class AppSettings: ObservableObject {
         didSet { persistExcludedApps() }
     }
 
+    /// ポップアップの翻訳に使うエンジン（週次分析は常にGemini）
+    @Published var translationProvider: TranslationProvider {
+        didSet {
+            UserDefaults.standard.set(translationProvider.rawValue, forKey: Self.providerKey)
+        }
+    }
+
     /// 毎朝の復習リマインダーを出すか
     @Published var isReviewReminderEnabled: Bool {
         didSet {
@@ -63,6 +109,10 @@ final class AppSettings: ObservableObject {
         geminiAPIKey = KeychainStore.read(account: Self.apiKeyAccount) ?? ""
         translationModel = UserDefaults.standard.string(forKey: Self.modelKey) ?? Self.defaultModel
         analysisModel = UserDefaults.standard.string(forKey: Self.analysisModelKey) ?? Self.defaultAnalysisModel
+        // 保存値が今の環境で使えないエンジンなら（OSを戻した等）Geminiに落とす
+        let storedProvider = UserDefaults.standard.string(forKey: Self.providerKey)
+            .flatMap(TranslationProvider.init(rawValue:))
+        translationProvider = (storedProvider?.isAvailable == true) ? storedProvider! : .gemini
         let storedExclusions = UserDefaults.standard.stringArray(forKey: Self.excludedAppsKey)
         excludedAppBundleIDs = storedExclusions.map(Set.init) ?? Self.defaultExcludedBundleIDs
         // 未設定なら既定値（初回起動）。以降はユーザーの編集が正
@@ -89,6 +139,15 @@ final class AppSettings: ObservableObject {
     }
 
     func makeEngine() -> TranslationEngine {
-        GeminiEngine(apiKey: geminiAPIKey, model: translationModel)
+        switch translationProvider {
+        case .appleOnDevice:
+            if #available(macOS 26.4, *) {
+                return AppleTranslationEngine()
+            }
+            // 使えない環境ではGeminiに落とす（isAvailableで弾いているので通常来ない）
+            return GeminiEngine(apiKey: geminiAPIKey, model: translationModel)
+        case .gemini:
+            return GeminiEngine(apiKey: geminiAPIKey, model: translationModel)
+        }
     }
 }
