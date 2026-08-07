@@ -33,6 +33,8 @@ final class SettingsWindowController {
 
 struct SettingsView: View {
     @ObservedObject var settings: AppSettings
+    /// 状態はシステム設定側でも変わるので、この画面を開くたびに問い合わせ直す
+    @StateObject private var loginItem = LoginItem()
 
     /// 所要時間も持つ。キーを差し替えて押せば無料枠と有料枠の速度差が比べられる
     /// （無料枠は応答に15〜20秒かかることがある）。失敗時も、即座の拒否か
@@ -96,10 +98,32 @@ struct SettingsView: View {
             Section("復習") {
                 Toggle("毎朝、期限が来たカードを通知する", isOn: $settings.isReviewReminderEnabled)
             }
+            Section("一般") {
+                Toggle("ログイン時に起動する", isOn: Binding(
+                    get: { loginItem.isEnabled },
+                    set: { loginItem.setEnabled($0) }
+                ))
+                if loginItem.requiresApproval {
+                    // この状態はアプリ側から解除できない。設定へ送るしかない
+                    Text("システム設定で許可が必要です。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button("「ログイン項目」を開く…") { loginItem.openSettings() }
+                        .controlSize(.small)
+                }
+                if let error = loginItem.lastError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
         .formStyle(.grouped)
         .frame(width: 460)
         .fixedSize(horizontal: false, vertical: true)
+        // システム設定で切り替えられている可能性があるので、開くたびに取り直す
+        .onAppear { loginItem.refresh() }
     }
 
     /// 選択中のエンジンで実際に1文訳してみる。
