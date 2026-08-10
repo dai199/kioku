@@ -11,7 +11,7 @@ enum AdoptionMethod: String, Sendable {
 
 /// ポップアップ1回分の翻訳の状態を持つ。「別の訳」の再生成にも対応する。
 @MainActor
-final class TranslationSession: ObservableObject {
+final class PopupTranslationSession: ObservableObject {
     enum Phase {
         case loading
         case streaming(String)  // 逐次表示中の部分テキスト

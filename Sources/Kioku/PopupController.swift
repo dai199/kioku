@@ -10,11 +10,11 @@ final class PopupController {
     private let panelWidth: CGFloat = 360
     private let estimatedHeight: CGFloat = 150
     private lazy var panel: NSPanel = makePanel()
-    private var currentSession: TranslationSession?
+    private var currentSession: PopupTranslationSession?
 
     var isVisible: Bool { panel.isVisible }
 
-    func show(session: TranslationSession, onOpenSettings: @escaping () -> Void) {
+    func show(session: PopupTranslationSession, onOpenSettings: @escaping () -> Void) {
         currentSession?.finalize()
         currentSession?.cancel()
         currentSession = session
@@ -119,7 +119,7 @@ final class PopupController {
 }
 
 struct PopupView: View {
-    @ObservedObject var session: TranslationSession
+    @ObservedObject var session: PopupTranslationSession
     let showArrow: Bool
     let arrowMidX: CGFloat
     let onOpenSettings: () -> Void

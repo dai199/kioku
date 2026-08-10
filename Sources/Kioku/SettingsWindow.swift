@@ -49,8 +49,8 @@ struct SettingsView: View {
     private struct TestFailure {
         let message: String
         let duration: TimeInterval
-        /// システム設定の「翻訳言語」で解決できる失敗か（導線を出す）
-        let isResolvableInLanguageSettings: Bool
+        /// 翻訳データが足りない言語ペア。あればダウンロードの導線を出す
+        let missingLanguages: (source: String, target: String)?
     }
 
     @State private var testPhase: TestPhase = .idle
@@ -161,11 +161,20 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                     // 折り返して必要なだけ縦に伸ばす（切り詰めない）
                     .fixedSize(horizontal: false, vertical: true)
-                // 手順を文章で説明するより、その場所を開けるほうが確実
-                if failure.isResolvableInLanguageSettings,
-                   let url = AppleTranslationError.languageSettingsURL {
-                    Button("「言語と地域」を開く…") { NSWorkspace.shared.open(url) }
-                        .controlSize(.small)
+                // 手順を文章で説明するより、その場でダウンロードさせるほうが確実。
+                // 設定ウィンドウは通常のアクティブなウィンドウなので、
+                // ポップアップと違ってダウンロード確認UIを出せる
+                if let missing = failure.missingLanguages {
+                    if #available(macOS 26.4, *) {
+                        LanguageDownloadButton(
+                            source: missing.source,
+                            target: missing.target,
+                            onFallback: openLanguageSettings
+                        )
+                    } else {
+                        Button("「言語と地域」を開く…", action: openLanguageSettings)
+                            .controlSize(.small)
+                    }
                 }
             }
         }
@@ -223,6 +232,11 @@ struct SettingsView: View {
         return FileManager.default.displayName(atPath: url.path)
     }
 
+    private func openLanguageSettings() {
+        guard let url = AppleTranslationError.languageSettingsURL else { return }
+        NSWorkspace.shared.open(url)
+    }
+
     private func addExcludedApp() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.application]
@@ -258,8 +272,7 @@ struct SettingsView: View {
                 testPhase = .failure(TestFailure(
                     message: error.localizedDescription,
                     duration: Date().timeIntervalSince(startedAt),
-                    isResolvableInLanguageSettings:
-                        (error as? AppleTranslationError)?.isResolvableInLanguageSettings == true
+                    missingLanguages: (error as? AppleTranslationError)?.missingLanguagePair
                 ))
             }
         }

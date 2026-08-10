@@ -9,8 +9,8 @@ import Translation
 /// 代わりにプロンプトを渡す口がないため、方向指定（もっとカジュアルに）も
 /// 「別の訳」も原理的に成立しない。`capabilities` で表明し、画面側が出し分ける。
 ///
-/// 注意: Appleの `TranslationSession` は本アプリの `TranslationSession`
-/// （ポップアップ1回分の状態）と名前が衝突する。モジュール名で明示的に修飾すること。
+/// ここでの `TranslationSession` はAppleのフレームワークの型。
+/// 本アプリのポップアップ側は `PopupTranslationSession` に改名して衝突を避けている。
 @available(macOS 26.4, *)
 struct AppleTranslationEngine: TranslationEngine {
     /// プロンプトを持たないので、実装の版を入れる。
@@ -35,9 +35,8 @@ struct AppleTranslationEngine: TranslationEngine {
             break
         }
 
-        // 本アプリの TranslationSession と衝突するのでモジュール名で修飾する。
         // ポップアップは即応性が要るので lowLatency を選ぶ（生成時にしか指定できない）
-        let session = Translation.TranslationSession(
+        let session = TranslationSession(
             installedSource: source, target: target, preferredStrategy: .lowLatency
         )
 
@@ -75,11 +74,14 @@ enum AppleTranslationError: LocalizedError {
         }
     }
 
-    /// システム設定の「翻訳言語」で解決できる失敗か。
-    /// 真なら呼び出し側が設定への導線を出す（文章で手順を説明するより確実）。
-    var isResolvableInLanguageSettings: Bool {
-        if case .languageNotDownloaded = self { return true }
-        return false
+    /// 翻訳データが足りない言語ペア。
+    /// 返ってきたら呼び出し側がダウンロードの導線を出す
+    /// （文章で手順を説明するより、その場でダウンロードさせるほうが確実）。
+    var missingLanguagePair: (source: String, target: String)? {
+        if case .languageNotDownloaded(let source, let target) = self {
+            return (source, target)
+        }
+        return nil
     }
 
     /// システム設定 > 一般 > 言語と地域（翻訳言語はこの中）。

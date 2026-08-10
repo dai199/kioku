@@ -129,7 +129,7 @@ final class AppCoordinator: ObservableObject {
     private func openPopup() {
         guard let event = currentEvent else { return }
         floatingIcon.hide()
-        let session = TranslationSession(
+        let session = PopupTranslationSession(
             event: event,
             engine: settings.makeEngine(),
             cache: translationCache

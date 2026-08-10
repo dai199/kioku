@@ -28,7 +28,7 @@ KiokuApp (MenuBarExtra, LSUIElement)
 └─ AppCoordinator ─── 権限・監視・UIを束ねる中枢。配線はここに集約する
    ├─ 検知  SelectionMonitor → SelectionProbe(AX API) → SelectionFilter
    ├─ 提示  FloatingIconController / PopupController（nonactivating NSPanel）
-   ├─ 翻訳  TranslationSession → TranslationEngine(protocol) → GeminiEngine
+   ├─ 翻訳  PopupTranslationSession → TranslationEngine(protocol) → GeminiEngine
    │        + TranslationCache / TextReplacer
    ├─ 永続  DatabaseManager（GRDB/SQLite）
    ├─ 学習  ReportManager → WeeklyAnalyzer / ReviewScheduler / CardContent
