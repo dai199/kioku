@@ -55,6 +55,12 @@ final class PopupController {
 
     /// 内容サイズの変化に合わせ、上端を固定したままパネルを伸縮する。
     /// 画面からはみ出す場合は見える位置までずらす（下端優先で全体が見えることを保証）。
+    ///
+    /// **リサイズはアニメーションしない。** させると、伸縮の途中でホスティングビューも
+    /// 一緒に変形し、その中間サイズが onGeometryChange から返ってきて、
+    /// ここが再び setFrame を呼ぶ——というループになる。しかも上端の基準に
+    /// その時点の frame.maxY を使うため、中断のたびに基準が動いて
+    /// ウィンドウ全体が揺れる。中間状態を作らなければ上端は動きようがない。
     private func resizeKeepingTop(to size: CGSize) {
         let frame = panel.frame
         guard abs(frame.height - size.height) > 0.5 || abs(frame.width - size.width) > 0.5 else {
@@ -170,6 +176,66 @@ struct PopupView: View {
             proxy.size
         } action: { size in
             onSizeChange(size)
+        }
+    }
+
+    /// 「詳しく」。開閉ではなく**生成**なので、押す前からそれと分かるようにする
+    /// （✨アイコン）。生成中は経過秒を出して、動いていることを見せる。
+    @ViewBuilder
+    private var detailSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button {
+                session.toggleDetail()
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "sparkles")
+                    Text("詳しく")
+                    Image(systemName: session.isDetailExpanded ? "chevron.up" : "chevron.down")
+                    Spacer()
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("文法とニュアンスをAIが解説します")
+
+            if session.isDetailExpanded {
+                switch session.detail {
+                case .idle:
+                    EmptyView()
+                case .loading:
+                    HStack(spacing: 6) {
+                        ProgressView().controlSize(.mini)
+                        TimelineView(.periodic(from: .now, by: 1)) { context in
+                            let elapsed = Int(
+                                context.date.timeIntervalSince(session.detailStartedAt)
+                            )
+                            Text(elapsed >= 5 ? "解説を生成中… \(elapsed)秒" : "解説を生成中…")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .monospacedDigit()
+                        }
+                        Spacer()
+                    }
+                case .ready(let text):
+                    Text(text)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                case .failed(let message):
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(message)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Button("再試行") { session.retryDetail() }
+                            .controlSize(.small)
+                    }
+                }
+            }
         }
     }
 
@@ -427,6 +493,12 @@ struct PopupView: View {
                 // アイコンを添えると1つあたり約18pt太り、4つ並べると幅360ptに収まらない。
                 // Labelのまま宣言しておき、スタイルだけここで落とす
                 .labelStyle(.titleOnly)
+
+                // 「詳しく」はボタン列の下に置く。上に置くと展開したときに
+                // ボタン列が押し下げられ、押したいボタンが動いてしまう
+                if session.capabilities.canExplain {
+                    detailSection
+                }
             }
 
         case .failed(let message, let missingAPIKey):

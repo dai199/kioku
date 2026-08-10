@@ -194,6 +194,45 @@ struct GeminiEngine: TranslationEngine {
         )
     }
 
+    func explain(_ request: ExplanationRequest) async throws -> String {
+        // 解説プロンプトを変えても訳文は変わらないので promptVersion は上げない
+        // （上げると翻訳キャッシュが無駄に飛び、選好シグナルの版も濁る）
+        try await client.generateText(
+            prompt: Self.explanationPrompt(for: request),
+            temperature: 0.3
+        )
+    }
+
+    static func explanationPrompt(for request: ExplanationRequest) -> String {
+        // 読解（英→日）は「なぜこう書かれているか」、作文（日→英）は
+        // 「なぜこう訳したか」を知りたい。方向で聞くことが変わる
+        let isWriting = request.sourceLanguage == "ja"
+        let focus = isWriting
+            ? """
+            The user wrote the Japanese and wants to send the English. Explain why this \
+            English phrasing works: the grammar or structure chosen, the register it conveys, \
+            and any wording that a Japanese speaker would be likely to get wrong here.
+            """
+            : """
+            The user is reading the English and wants to understand it. Explain the grammar or \
+            structure that makes it hard to parse, any idioms or set phrases, and nuance that \
+            the Japanese translation cannot carry.
+            """
+
+        return """
+        You are an English tutor for a Japanese learner.
+
+        \(focus)
+
+        Write in Japanese. Use 2 to 4 short bullet points, each starting with "・". \
+        Be concrete and refer to the actual words in the text. \
+        No preamble, no restatement of the translation, no headings.
+
+        English: \(isWriting ? request.translatedText : request.sourceText)
+        Japanese: \(isWriting ? request.sourceText : request.translatedText)
+        """
+    }
+
     func prompt(for request: TranslationRequest) -> String {
         let names = ["en": "English", "ja": "Japanese"]
         let source = names[request.sourceLanguage] ?? request.sourceLanguage

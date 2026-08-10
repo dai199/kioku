@@ -23,11 +23,36 @@ struct EngineCapabilities: Sendable {
     var canRegenerate: Bool
     /// 「もっとカジュアルに」等の方向指定を解釈できるか
     var canDirectStyle: Bool
+    /// 文法・ニュアンスの解説を生成できるか
+    var canExplain: Bool
 
     /// プロンプトを自由に組み立てられるLLM向け
-    static let full = EngineCapabilities(canRegenerate: true, canDirectStyle: true)
+    static let full = EngineCapabilities(
+        canRegenerate: true, canDirectStyle: true, canExplain: true
+    )
     /// 原文を渡して訳を受け取るだけのエンジン向け
-    static let translateOnly = EngineCapabilities(canRegenerate: false, canDirectStyle: false)
+    static let translateOnly = EngineCapabilities(
+        canRegenerate: false, canDirectStyle: false, canExplain: false
+    )
+}
+
+/// 訳の背景を解説してもらうための入力。
+struct ExplanationRequest: Sendable {
+    let sourceText: String
+    let translatedText: String
+    let sourceLanguage: String
+    let targetLanguage: String
+}
+
+enum EngineError: LocalizedError {
+    case unsupported(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupported(let what):
+            return "このエンジンは\(what)に対応していません。"
+        }
+    }
 }
 
 /// 翻訳エンジンの抽象化。将来Apple Translation（オフライン）や
@@ -49,9 +74,17 @@ protocol TranslationEngine: Sendable {
     func translate(_ request: TranslationRequest) async throws -> String
     /// 逐次テキスト片を返すストリーミング翻訳。
     func translateStream(_ request: TranslationRequest) -> AsyncThrowingStream<String, Error>
+    /// 文法・ニュアンスの解説。`capabilities.canExplain` が真のエンジンだけが実装する。
+    func explain(_ request: ExplanationRequest) async throws -> String
 }
 
 extension TranslationEngine {
+    /// 解説できないエンジンの既定。UIは `canExplain` を見て出し分けるので
+    /// 通常ここには来ないが、能力の申告と実装がずれたときに黙って通さない。
+    func explain(_ request: ExplanationRequest) async throws -> String {
+        throw EngineError.unsupported("解説の生成")
+    }
+
     /// ストリーミング未対応エンジンは全文を1回で返す。
     func translateStream(_ request: TranslationRequest) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in

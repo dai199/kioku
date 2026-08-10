@@ -27,8 +27,20 @@ final class PopupTranslationSession: ObservableObject {
         case alreadyExists  // 同じ表裏のカードが既にあった
     }
 
+    /// 「詳しく」の中身。開閉ではなく生成なので、状態を持つ
+    enum DetailState {
+        case idle          // まだ生成していない
+        case loading
+        case ready(String)
+        case failed(String)
+    }
+
     @Published private(set) var phase: Phase = .loading
     @Published private(set) var cardState: CardState = .notAdded
+    @Published private(set) var isDetailExpanded = false
+    @Published private(set) var detail: DetailState = .idle
+    /// 解説の生成開始時刻（待ち時間の表示に使う）
+    @Published private(set) var detailStartedAt = Date()
     /// 今の生成を開始した時刻。待ち時間を画面に出すために使う
     /// （応答に15秒以上かかることがあり、進行中か固まったか区別できないため）
     @Published private(set) var startedAt = Date()
@@ -57,6 +69,7 @@ final class PopupTranslationSession: ObservableObject {
     private let cache: TranslationCache?
     private var hasLoggedReading = false
     private var task: Task<Void, Never>?
+    private var detailTask: Task<Void, Never>?
 
     init(
         event: SelectionEvent,
@@ -127,6 +140,53 @@ final class PopupTranslationSession: ObservableObject {
         runTranslation()
     }
 
+    /// 「詳しく」の開閉。開くのは追加の生成を伴うので、初回だけ実際に呼ぶ。
+    /// たたんで開き直しても作り直さない（同じ訳への解説は変わらないため）。
+    func toggleDetail() {
+        isDetailExpanded.toggle()
+        guard isDetailExpanded else { return }
+        if case .idle = detail {
+            generateDetail()
+        }
+    }
+
+    /// 解説の生成に失敗したときのやり直し。
+    func retryDetail() {
+        guard case .failed = detail else { return }
+        generateDetail()
+    }
+
+    private func generateDetail() {
+        guard case .done(let translation) = phase else { return }
+        detailTask?.cancel()
+        detail = .loading
+        detailStartedAt = Date()
+        let request = ExplanationRequest(
+            sourceText: event.text,
+            translatedText: translation,
+            sourceLanguage: sourceLanguage,
+            targetLanguage: targetLanguage
+        )
+        detailTask = Task { @MainActor in
+            do {
+                let text = try await engine.explain(request)
+                guard !Task.isCancelled else { return }
+                detail = .ready(text)
+            } catch {
+                guard !Task.isCancelled else { return }
+                detail = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    /// 訳が変われば解説も無効になる。閉じて捨てる。
+    private func discardDetail() {
+        detailTask?.cancel()
+        detailTask = nil
+        isDetailExpanded = false
+        detail = .idle
+    }
+
     /// 失敗した翻訳をやり直す。タイムアウトや一時的な通信断から戻るための操作。
     func retry() {
         guard case .failed = phase else { return }
@@ -135,6 +195,7 @@ final class PopupTranslationSession: ObservableObject {
 
     func cancel() {
         task?.cancel()
+        detailTask?.cancel()
     }
 
     /// 訳を採用した（置き換え/コピーした）ときに呼ぶ。
@@ -202,6 +263,8 @@ final class PopupTranslationSession: ObservableObject {
 
     private func runTranslation() {
         task?.cancel()
+        // 訳が変わる＝これまでの解説は無効
+        discardDetail()
 
         // 初回のみキャッシュを見る（再生成はバリエーション目的なので対象外）
         if previousCandidates.isEmpty,

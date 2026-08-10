@@ -56,6 +56,39 @@ struct TranslationPromptTests {
         #expect(result.contains(StyleDirection.casual.instruction))
     }
 
+    // MARK: - 解説プロンプト
+
+    private func explanation(source: String, target: String) -> String {
+        GeminiEngine.explanationPrompt(for: ExplanationRequest(
+            sourceText: source == "ja" ? "確認します" : "Let me check.",
+            translatedText: source == "ja" ? "Let me check." : "確認します",
+            sourceLanguage: source,
+            targetLanguage: target
+        ))
+    }
+
+    @Test("解説は英文と日本語文の両方を渡す（方向によらず取り違えない）",
+          arguments: [("ja", "en"), ("en", "ja")])
+    func explanationIncludesBothTexts(pair: (source: String, target: String)) {
+        let result = explanation(source: pair.source, target: pair.target)
+        #expect(result.contains("English: Let me check."))
+        #expect(result.contains("Japanese: 確認します"))
+    }
+
+    @Test("読解（英→日）では、英文を理解するための観点を聞く")
+    func explanationForReading() {
+        let result = explanation(source: "en", target: "ja")
+        #expect(result.contains("reading the English"))
+        #expect(!result.contains("wants to send the English"))
+    }
+
+    @Test("作文（日→英）では、英文を送る側の観点を聞く")
+    func explanationForWriting() {
+        let result = explanation(source: "ja", target: "en")
+        #expect(result.contains("wants to send the English"))
+        #expect(!result.contains("reading the English"))
+    }
+
     @Test("方向の指示は原文より前に置く（末尾の原文が指示に埋もれないように）")
     func directionComesBeforeSourceText() {
         let result = prompt(text: "確認します", direction: .formal)
