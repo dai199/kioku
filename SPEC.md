@@ -112,6 +112,14 @@ Grammarlyに近い体験だが、「過去ログの見やすさ」と「何を�
 - **配布**（2026-08-10 決定）:
   - **.dmg（ドラッグ&ドロップ）** を主とし、**Homebrew Cask** を併設する。
     .pkg は管理者パスワードを要求する割に得るものがない（システム拡張等を置かないため）
+  - **Homebrew formula（ソースからビルドさせる形）は不可**（2026-08-11 実地検証）。
+    公証費用を避ける抜け道として試したが、SwiftPMが `Package.swift` の
+    コンパイルに `sandbox-exec` を使うため、Homebrewのインストール環境下で
+    `sandbox_apply: Operation not permitted` になりGRDBの解決に失敗する。
+    `HOMEBREW_NO_SANDBOX=1` でも回避できなかった。
+    MacVimやemacs-plusが同じ形で成立しているのはSwiftPMを使っていないため。
+    回避するにはGRDBのvendor化が要るが、Homebrewのために本体の依存構成を
+    歪めることになるので採らない。**Homebrew経由で配るならCask（＝要notarize）が唯一の道**
   - Accessibility API必須でサンドボックス非互換 → Mac App Storeには出せない。
     notarize済み直接配布（＋将来Sparkle自動更新、バックログ12）
   - **前提**: 現状は `ENABLE_HARDENED_RUNTIME: false` の自分用署名。
