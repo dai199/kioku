@@ -28,8 +28,15 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.daikitagami.kioku
-        DEVELOPMENT_TEAM: C8FHUZ27C7
-        CODE_SIGN_STYLE: Automatic
+        # 署名は固定しない。特定のTeam IDを直書きすると他の人のビルドが通らない。
+        # 既定はad-hoc署名（Apple Siliconでは無署名だと起動できないため最低限必要）。
+        # 自分の証明書で署名するなら `make build TEAM=XXXXXXXXXX` で上書きする。
+        # 署名が安定するとアクセシビリティ権限が更新後も保持されるので、
+        # 継続して使うなら自分のTeam IDを渡すほうが快適
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGNING_REQUIRED: YES
+        CODE_SIGNING_ALLOWED: YES
         SWIFT_VERSION: "6.0"
         # Accessibility APIを使うためApp Sandboxは無効（entitlementsなし）
         ENABLE_HARDENED_RUNTIME: false

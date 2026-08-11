@@ -76,9 +76,22 @@ cd kioku
 make run     # generate the project, build, and launch
 ```
 
-**You will need to change the signing team.** `project.yml` contains
-`DEVELOPMENT_TEAM: C8FHUZ27C7`, which is the author's Apple Developer team ID.
-Replace it with your own, or clear it and select a team in Xcode.
+### Signing
+
+By default the build is ad-hoc signed, so it works without any Apple Developer
+account. Nothing to configure.
+
+If you have an Apple ID registered in Xcode (a free one is enough), pass your team
+ID instead:
+
+```sh
+make build TEAM=XXXXXXXXXX   # Xcode > Settings > Accounts
+```
+
+This is worth doing if you plan to keep using Kioku. macOS ties the Accessibility
+permission to the app's code signature, and an ad-hoc signature changes every time
+you rebuild — meaning you have to grant the permission again after each update. A
+signature from your own certificate stays stable.
 
 `Kioku.xcodeproj` is generated from `project.yml` and is not tracked in git. Always
 edit `project.yml` for target, build setting, and dependency changes.

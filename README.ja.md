@@ -71,8 +71,20 @@ cd kioku
 make run     # プロジェクト生成 → ビルド → 起動
 ```
 
-**署名チームの変更が必要です。** `project.yml` の `DEVELOPMENT_TEAM: C8FHUZ27C7` は
-作者のApple Developer Team IDです。ご自身のものに置き換えるか、空にしてXcodeで選択してください。
+### 署名について
+
+既定では ad-hoc 署名でビルドされるので、Apple Developer アカウントがなくても
+そのまま通ります。設定は不要です。
+
+XcodeにApple ID（無料のもので構いません）を登録しているなら、Team ID を渡せます。
+
+```sh
+make build TEAM=XXXXXXXXXX   # Xcode > Settings > Accounts で確認
+```
+
+継続して使うならこちらを勧めます。macOSはアクセシビリティ権限を**コード署名に紐づけて**
+記憶しますが、ad-hoc署名はビルドのたびに変わるため、**更新のたびに権限を付け直す**
+ことになります。自分の証明書なら署名が安定するので、その手間がなくなります。
 
 `Kioku.xcodeproj` は `project.yml` から生成される成果物でgit管理外です。
 ターゲット・ビルド設定・依存の変更は必ず `project.yml` を編集してください。
