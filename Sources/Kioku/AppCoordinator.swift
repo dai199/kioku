@@ -96,8 +96,17 @@ final class AppCoordinator: ObservableObject {
         }
         currentEvent = event
         rememberSelection(event)
-        // 選択範囲の右上に出す（AX座標→ドラッグ2点からの推定→マウス位置の順）
-        floatingIcon.show(near: event.iconAnchor)
+        // どの経路で位置を決めたかを、アプリ名と一緒に記録する。
+        // AXが選択範囲を返すかはアプリごとに違うので、アプリ名がないと
+        // 「どこを手当てすべきか」が分からない
+        let anchor = event.anchor
+        translationLogger.debug(
+            """
+            アイコン表示 基準=\(anchor.source.rawValue, privacy: .public) \
+            app=\(event.appName ?? "?", privacy: .public)
+            """
+        )
+        floatingIcon.show(near: anchor.point)
     }
 
     private func rememberSelection(_ event: SelectionEvent) {

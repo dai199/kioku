@@ -20,20 +20,34 @@ struct SelectionEvent {
     /// 出典: ドキュメントのURL/パス（公開しているアプリのみ）
     let documentURL: String?
 
-    /// フローティングアイコンを出すべき位置（選択範囲の右上）。
-    /// 優先度: AXの選択範囲座標 → ドラッグ開始/終了点からの推定 → マウス位置。
-    var iconAnchor: NSPoint {
+    /// アイコンの位置をどこから決めたか（実測用。近似に落ちる頻度を見る）
+    enum AnchorSource: String {
+        case selectionBounds   // AXが選択範囲を返した。狙いどおりの位置
+        case dragRect          // AXが返さないアプリ。ドラッグ2点からの近似
+        case fallback          // キーボード選択で範囲も取れない。手がかりなし
+    }
+
+    /// フローティングアイコンを出すべき位置。**常に選択範囲の右上**。
+    ///
+    /// AXが選択範囲を返すアプリなら、マウス・キーボードのどちらで選んでも
+    /// 同じ規則で決まる（入力方法には依存しない）。
+    /// 返さないアプリでは、マウス選択に限りドラッグ2点から近似する。
+    /// キーボード選択で範囲も取れない場合だけは手がかりがないので、
+    /// やむなくマウス位置に落とす（`fallback`。頻度はログで測っている）。
+    var anchor: (point: NSPoint, source: AnchorSource) {
         if let bounds = selectionBounds {
-            return NSPoint(x: bounds.maxX, y: bounds.maxY)
+            return (NSPoint(x: bounds.maxX, y: bounds.maxY), .selectionBounds)
         }
         if let down = mouseDownLocation {
-            return NSPoint(
-                x: max(down.x, mouseLocation.x),
-                y: max(down.y, mouseLocation.y)
+            return (
+                NSPoint(x: max(down.x, mouseLocation.x), y: max(down.y, mouseLocation.y)),
+                .dragRect
             )
         }
-        return mouseLocation
+        return (mouseLocation, .fallback)
     }
+
+    var iconAnchor: NSPoint { anchor.point }
 }
 
 extension SelectionEvent {
