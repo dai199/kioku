@@ -1,0 +1,10 @@
+// ダッシュボードに配信ディレクトリの項目がないため、ここに書かないと
+// 設定がCloudflare側にだけ残り、作り直したときに再現できない。
+// name がCloudflare側のサービス名とずれると、別のWorkerが作られる。
+{
+  "name": "kioku",
+  "compatibility_date": "2026-08-14",
+  "assets": {
+    "directory": "./sites"
+  }
+}
