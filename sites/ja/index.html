@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kioku — 読んだ英語を、覚えている英語に。</title>
+<meta name="description" content="macOSで選んだテキストをその場で翻訳します。履歴は学習素材として貯まり、週に一度、覚える価値のある表現をAIが選び出します。">
+<link rel="alternate" hreflang="en" href="https://kioku.tagamidaiki.com/">
+<link rel="alternate" hreflang="ja" href="https://kioku.tagamidaiki.com/ja/">
+<link rel="alternate" hreflang="x-default" href="https://kioku.tagamidaiki.com/">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">Kioku</a>
+    <a class="lang" href="../">English</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="demo">
+        <p class="demo-source rise"><mark>確認して折り返します。</mark></p>
+        <p class="demo-arrow rise rise-2">選ぶ → その場で置き換わる</p>
+        <p class="demo-result rise rise-3">I'll look into it and get back to you.</p>
+      </div>
+
+      <p class="lede rise rise-4">
+        macOSで選んだテキストをその場で翻訳します。履歴は学習素材として貯まり、
+        週に一度、覚える価値のある表現をAIが選び出します。
+        <strong>英語を日常的に読み書きする人のための、メニューバー常駐アプリです。</strong>
+      </p>
+
+      <div class="actions rise rise-4">
+        <a class="btn btn-primary" href="#install">ソースからビルドする</a>
+        <a class="btn" href="https://github.com/dai199/kioku">GitHubで見る</a>
+      </div>
+    </section>
+
+    <!-- スクリーンショット（ポップアップ翻訳）をここに差し込む -->
+
+    <section class="loop">
+      <p class="label">The loop</p>
+      <div class="entries">
+        <div class="entry">
+          <h2 class="entry-word">選ぶ<span class="entry-gloss">select</span></h2>
+          <p class="entry-body">
+            どのアプリでもテキストを選ぶと、小さなアイコンが出ます。
+            クリックするまで何も送信されません。選んだだけでは通信は起きません。
+          </p>
+        </div>
+        <div class="entry">
+          <h2 class="entry-word">置き換える<span class="entry-gloss">replace</span></h2>
+          <p class="entry-body">
+            英語を書くときは、日本語の下書きを選ぶだけ。採用した英文が
+            <em>書いていたその場所で</em>入れ替わります。もっとカジュアルに、
+            もっとフォーマルに、もっと短く——納得するまで方向を指定できます。
+          </p>
+        </div>
+        <div class="entry">
+          <h2 class="entry-word">貯まる<span class="entry-gloss">accumulate</span></h2>
+          <p class="entry-body">
+            翻訳はすべて手元に残ります。どのアプリで、いつ調べたかも一緒に。
+            多くのツールが捨てている部分ですが、価値があるのはここです。
+          </p>
+        </div>
+        <div class="entry">
+          <h2 class="entry-word">選ばれる<span class="entry-gloss">curate</span></h2>
+          <p class="entry-body">
+            週に一度、AIが履歴を読んで、繰り返しつまずいているパターンを指摘し、
+            カード候補をいくつか提案します。承認したものだけが復習に入ります。
+            勝手にカードは増えません。
+          </p>
+        </div>
+        <div class="entry">
+          <h2 class="entry-word">覚える<span class="entry-gloss">remember</span></h2>
+          <p class="entry-body">
+            間隔反復で復習します。3段階の自己評価、1日20枚まで。
+            1回のセッションが5分を超えないようにしてあります。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="recall">
+      <p class="label">覚えていますか</p>
+      <div class="recall-card">
+        <p class="recall-front">確認して折り返します。</p>
+        <button class="recall-btn" type="button" data-reveal>英文を表示する</button>
+        <p class="recall-back" hidden data-answer>I'll look into it and get back to you.</p>
+      </div>
+      <p class="recall-note">
+        これがこのアプリの考え方そのものです。ページの冒頭で一度見た文を、
+        少し経ってから思い出そうとしていただきました。Kiokuは同じことを、
+        あなたが実際に出会った英語で、分単位ではなく週単位の間隔で行います。
+      </p>
+    </section>
+
+    <section class="privacy">
+      <p class="label">プライバシー</p>
+      <ul class="privacy-list">
+        <li>
+          <strong>クリックするまで何も送りません。</strong>
+          <span>選択した時点ではアイコンが出るだけで、通信は発生しません。</span>
+        </li>
+        <li>
+          <strong>そもそも一切送らない選択肢があります。</strong>
+          <span>Apple のオンデバイス翻訳を選べば、テキストはMacから出ません。オフラインで動き、費用もかかりません。</span>
+        </li>
+        <li>
+          <strong>Kiokuのサーバーは存在しません。</strong>
+          <span>APIキーはあなたのものです。テキストはあなたのMacから、あなたが設定したプロバイダへ直接送られます。</span>
+        </li>
+        <li>
+          <strong>初めから除外されているアプリがあります。</strong>
+          <span>パスワードマネージャーは既定で除外済みで、任意のアプリを追加できます。除外したアプリではアイコン自体が出ません。</span>
+        </li>
+        <li>
+          <strong>履歴は手元に残ります。</strong>
+          <span>翻訳・カード・レポートは、自分で中身を確認したり削除したりできるローカルのデータベースに保存されます。</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="install" id="install">
+      <p class="label">導入</p>
+      <p class="note" style="margin-bottom:1.25rem">
+        まだ公証を通していないため、ビルド済みの配布物はありません。ソースからビルドしてください。
+        読めるコードを自分で動かす形なので、Gatekeeperの警告を回避する必要もありません。
+        macOS 26 と Xcode が必要です。
+      </p>
+      <pre><code>brew install xcodegen
+git clone https://github.com/dai199/kioku.git
+cd kioku
+make run</code></pre>
+      <p class="note">
+        選択したテキストを読むためにアクセシビリティ権限が必要です。同じ理由で
+        Mac App Store では配布できません。詳しい手順は
+        <a href="https://github.com/dai199/kioku/blob/main/README.ja.md">README</a> にあります。
+      </p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>AGPL-3.0</span>
+    <span>© 2026 Tagami Daiki</span>
+    <a href="https://github.com/dai199/kioku">ソース</a>
+    <a href="../">English</a>
+  </footer>
+</div>
+
+<script src="../script.js" defer></script>
+</body>
+</html>

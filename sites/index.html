@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kioku — Translate what you read. Remember what matters.</title>
+<meta name="description" content="Translate any text you select on macOS. Your history becomes study material — and each week, AI picks the expressions worth keeping.">
+<link rel="alternate" hreflang="en" href="https://kioku.tagamidaiki.com/">
+<link rel="alternate" hreflang="ja" href="https://kioku.tagamidaiki.com/ja/">
+<link rel="alternate" hreflang="x-default" href="https://kioku.tagamidaiki.com/">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">Kioku</a>
+    <a class="lang" href="./ja/">日本語</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="demo">
+        <p class="demo-source rise"><mark>確認して折り返します。</mark></p>
+        <p class="demo-arrow rise rise-2">selected → translated in place</p>
+        <p class="demo-result rise rise-3">I'll look into it and get back to you.</p>
+      </div>
+
+      <p class="lede rise rise-4">
+        Kioku translates any text you select on macOS. Your history becomes study
+        material — and each week, AI picks the expressions worth keeping.
+        <strong>A menu bar app for Japanese speakers who read and write English every day.</strong>
+      </p>
+
+      <div class="actions rise rise-4">
+        <a class="btn btn-primary" href="#install">Build from source</a>
+        <a class="btn" href="https://github.com/dai199/kioku">View on GitHub</a>
+      </div>
+    </section>
+
+    <!-- スクリーンショット（ポップアップ翻訳）をここに差し込む -->
+
+    <section class="loop">
+      <p class="label">The loop</p>
+      <div class="entries">
+        <div class="entry">
+          <h2 class="entry-word">選ぶ<span class="entry-gloss">select</span></h2>
+          <p class="entry-body">
+            Select text in any app and a small icon appears. Nothing is sent
+            anywhere until you click it — selecting alone never touches the network.
+          </p>
+        </div>
+        <div class="entry">
+          <h2 class="entry-word">置き換える<span class="entry-gloss">replace</span></h2>
+          <p class="entry-body">
+            Writing in English? Select your Japanese draft and Kioku swaps it for
+            the English you pick, <em>right where you were typing</em>. Ask for a
+            different tone — more casual, more formal, shorter — until it sounds right.
+          </p>
+        </div>
+        <div class="entry">
+          <h2 class="entry-word">貯まる<span class="entry-gloss">accumulate</span></h2>
+          <p class="entry-body">
+            Every translation is kept locally, with the app you were in and when.
+            This is the part most tools throw away, and it is the part worth keeping.
+          </p>
+        </div>
+        <div class="entry">
+          <h2 class="entry-word">選ばれる<span class="entry-gloss">curate</span></h2>
+          <p class="entry-body">
+            Once a week, an AI reads your history, points out the patterns you keep
+            stumbling on, and proposes a handful of flashcards. You approve the ones
+            you want. Nothing becomes a card without your say-so.
+          </p>
+        </div>
+        <div class="entry">
+          <h2 class="entry-word">覚える<span class="entry-gloss">remember</span></h2>
+          <p class="entry-body">
+            Review with spaced repetition — three ratings, twenty cards a day at
+            most, so a session stays under five minutes.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="recall">
+      <p class="label">Still with us?</p>
+      <div class="recall-card">
+        <p class="recall-front">確認して折り返します。</p>
+        <button class="recall-btn" type="button" data-reveal>Show the English</button>
+        <p class="recall-back" hidden data-answer>I'll look into it and get back to you.</p>
+      </div>
+      <p class="recall-note">
+        That is the whole idea. You saw this phrase once at the top of the page, and
+        a minute later you were asked to recall it. Kioku does the same thing with
+        the English you actually run into, spaced out over weeks instead of minutes.
+      </p>
+    </section>
+
+    <section class="privacy">
+      <p class="label">Privacy</p>
+      <ul class="privacy-list">
+        <li>
+          <strong>Nothing is sent until you click.</strong>
+          <span>Selecting text only shows an icon. No request happens until you act on it.</span>
+        </li>
+        <li>
+          <strong>Or choose an engine that never sends anything.</strong>
+          <span>With Apple's on-device translation, nothing leaves your Mac. It works offline and costs nothing.</span>
+        </li>
+        <li>
+          <strong>There is no Kioku server.</strong>
+          <span>You bring your own API key. Text goes from your Mac to the provider you configured, and nowhere else.</span>
+        </li>
+        <li>
+          <strong>Some apps are excluded outright.</strong>
+          <span>Password managers are excluded by default, and you can add any app. There, the icon never appears at all.</span>
+        </li>
+        <li>
+          <strong>Your history stays on your machine.</strong>
+          <span>Translations, cards, and reports live in a local database you can inspect or delete.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="install" id="install">
+      <p class="label">Install</p>
+      <p class="note" style="margin-bottom:1.25rem">
+        Kioku is not notarized yet, so there is no prebuilt download. Build it from
+        source — you run what you can read, and there is no Gatekeeper warning to
+        work around. Requires macOS 26 and Xcode.
+      </p>
+      <pre><code>brew install xcodegen
+git clone https://github.com/dai199/kioku.git
+cd kioku
+make run</code></pre>
+      <p class="note">
+        Kioku needs Accessibility permission to read the text you select, and it
+        cannot ship on the Mac App Store for the same reason. Full setup notes are in
+        the <a href="https://github.com/dai199/kioku#readme">README</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>AGPL-3.0</span>
+    <span>© 2026 Tagami Daiki</span>
+    <a href="https://github.com/dai199/kioku">Source</a>
+    <a href="./ja/">日本語</a>
+  </footer>
+</div>
+
+<script src="./script.js" defer></script>
+</body>
+</html>
