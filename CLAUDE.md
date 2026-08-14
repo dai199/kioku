@@ -98,6 +98,18 @@ Chromium/Electron系は**「非対応」ではなく「成功を返しつつ中�
 /usr/bin/log show --last 30m --predicate 'subsystem == "com.daikitagami.kioku"' --info --debug | grep -E "アイコン表示|選択矩形"
 ```
 
+## 署名（アクセシビリティ権限が黙って外れる罠）
+
+**`xcodebuild` を直接叩かないこと。必ず `make` を経由する。**
+
+macOSはアクセシビリティ権限を**コード署名に紐づけて**記憶する。既定は ad-hoc 署名なので、
+`make` を通さずにビルドするとアプリが ad-hoc で上書きされ、**設定画面ではオンに見えたまま
+権限が失効する**（`AXIsProcessTrusted()` が false になり、メニューバーが⚠️になる）。
+原因が署名だと気づきにくい。
+
+`make` は `.team`（git管理外）に書いたTeam IDで署名するので、経由すれば署名が安定する。
+`.team` が無い環境では ad-hoc になり、誰でもビルドは通る。
+
 ## 動作確認
 
 **変更を目視で確かめる前に必ずアプリを再起動する**（`make run`、または `pkill -x Kioku` → `open`）。

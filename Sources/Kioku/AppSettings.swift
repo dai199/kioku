@@ -5,6 +5,7 @@ import Foundation
 enum TranslationProvider: String, CaseIterable, Sendable, Identifiable {
     case gemini
     case appleOnDevice
+    case appleIntelligence
 
     var id: String { rawValue }
 
@@ -12,6 +13,7 @@ enum TranslationProvider: String, CaseIterable, Sendable, Identifiable {
         switch self {
         case .gemini: "Gemini（クラウド）"
         case .appleOnDevice: "Apple 翻訳（端末内）"
+        case .appleIntelligence: "Apple Intelligence（端末内）"
         }
     }
 
@@ -22,6 +24,9 @@ enum TranslationProvider: String, CaseIterable, Sendable, Identifiable {
         case .appleOnDevice:
             return "テキストが端末から出ない。オフラインでも動き、費用もかからない。"
                 + "「別の訳」と方向指定は使えない"
+        case .appleIntelligence:
+            return "テキストが端末から出ないまま「別の訳」と方向指定が使える。"
+                + "費用もかからないが、口語の訳はクラウドに劣る"
         }
     }
 
@@ -33,6 +38,11 @@ enum TranslationProvider: String, CaseIterable, Sendable, Identifiable {
             return true
         case .appleOnDevice:
             if #available(macOS 26.4, *) { return true }
+            return false
+        case .appleIntelligence:
+            // 端末が対応していてもApple Intelligenceが無効なら使えない。
+            // 実際に使えるかは実行時にしか分からないので、ここでは型の可用性だけ見る
+            if #available(macOS 26.0, *) { return true }
             return false
         }
     }
@@ -145,6 +155,11 @@ final class AppSettings: ObservableObject {
                 return AppleTranslationEngine()
             }
             // 使えない環境ではGeminiに落とす（isAvailableで弾いているので通常来ない）
+            return GeminiEngine(apiKey: geminiAPIKey, model: translationModel)
+        case .appleIntelligence:
+            if #available(macOS 26.0, *) {
+                return FoundationModelsEngine()
+            }
             return GeminiEngine(apiKey: geminiAPIKey, model: translationModel)
         case .gemini:
             return GeminiEngine(apiKey: geminiAPIKey, model: translationModel)

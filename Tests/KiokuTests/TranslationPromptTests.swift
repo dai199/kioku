@@ -6,8 +6,6 @@ import Testing
 /// ここが黙って落ちると、方向を選んでも何も変わらないのに気づけない。
 @Suite("翻訳プロンプトの組み立て")
 struct TranslationPromptTests {
-    private let engine = GeminiEngine(apiKey: "", model: "")
-
     private func prompt(
         text: String = "確認します",
         source: String = "ja",
@@ -15,7 +13,7 @@ struct TranslationPromptTests {
         avoiding: [String] = [],
         direction: StyleDirection? = nil
     ) -> String {
-        engine.prompt(for: TranslationRequest(
+        TranslationPrompt.translate(for: TranslationRequest(
             text: text,
             sourceLanguage: source,
             targetLanguage: target,
@@ -59,7 +57,7 @@ struct TranslationPromptTests {
     // MARK: - 解説プロンプト
 
     private func explanation(source: String, target: String) -> String {
-        GeminiEngine.explanationPrompt(for: ExplanationRequest(
+        TranslationPrompt.explain(for: ExplanationRequest(
             sourceText: source == "ja" ? "確認します" : "Let me check.",
             translatedText: source == "ja" ? "Let me check." : "確認します",
             sourceLanguage: source,
