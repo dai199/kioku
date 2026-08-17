@@ -19,7 +19,7 @@ endif
 XCODEBUILD := xcodebuild -project Kioku.xcodeproj -scheme Kioku -configuration Debug \
 	-derivedDataPath $(DERIVED)
 
-.PHONY: generate build run test clean
+.PHONY: generate build run test eval clean
 
 generate:
 	xcodegen generate
@@ -28,7 +28,17 @@ build: generate
 	$(XCODEBUILD) $(SIGN) build
 
 test: generate
-	$(XCODEBUILD) $(SIGN) test
+	$(XCODEBUILD) $(SIGN) -skip-testing:KiokuTests/EngineEvaluation test
+
+# エンジン比較の計測。実DBの原文と実APIを使うので、通常のテストとは分けてある。
+# 結果は eval-results/ に書き出す（実データを含むためgit管理外）。
+#     make eval LIMIT=40   … 原文の件数を変える
+# 有効化は -only-testing / -skip-testing で行う。環境変数は
+# xcodebuildがテストプロセスへ渡さないため使えない（TEST_RUNNER_接頭辞でも届かない）。
+LIMIT ?= 20
+eval: generate
+	@echo $(LIMIT) > .eval-limit
+	$(XCODEBUILD) $(SIGN) -only-testing:KiokuTests/EngineEvaluation test
 
 run: build
 	@pkill -x Kioku || true

@@ -3,3 +3,5 @@ Kioku.xcodeproj/
 .DS_Store
 xcuserdata/
 .team
+eval-results/
+.eval-limit

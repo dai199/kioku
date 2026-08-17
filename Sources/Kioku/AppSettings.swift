@@ -20,13 +20,13 @@ enum TranslationProvider: String, CaseIterable, Sendable, Identifiable {
     var detail: String {
         switch self {
         case .gemini:
-            return "文脈に合わせた自然な訳。「別の訳」と方向指定が使える。APIキーが要る"
+            return "文脈に合わせた訳が得意。「別の訳」と方向指定も使える。APIキーが必要"
         case .appleOnDevice:
-            return "テキストが端末から出ない。オフラインでも動き、費用もかからない。"
-                + "「別の訳」と方向指定は使えない"
+            return "いちばん速く、端末内で完結。オフラインでも無料で使える。"
+                + "訳を返すことに特化しているので、「別の訳」と方向指定は対象外"
         case .appleIntelligence:
-            return "テキストが端末から出ないまま「別の訳」と方向指定が使える。"
-                + "費用もかからないが、口語の訳はクラウドに劣る"
+            return "端末内で完結しながら「別の訳」と方向指定まで使える。無料。"
+                + "仕上げにこだわる場面ではクラウドと読み比べるとよい"
         }
     }
 
