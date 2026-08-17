@@ -51,6 +51,12 @@ KiokuApp (MenuBarExtra, LSUIElement)
 - **学習データを見る画面はメインウィンドウに集約する**。新しいウィンドウを増やさない
   （設定だけは⌘,の慣習で独立）
 - **ユーザー向け文言・コード内コメントは日本語**
+- **SwiftUIを通らないユーザー向け文言は `String(localized:)` で書く**。
+  `Text("覚える")` などSwiftUIのリテラルは `LocalizedStringKey` として扱われるので
+  そのままでよい。対象になるのは素の `String` を返すところ——
+  エラーの `errorDescription`、通知の本文、`TranslationProvider.detail` など。
+  UIの多言語化は未着手（SPEC §10）だが、**新しく足す文言だけ先に対応させておけば
+  未対応分が増え続けるのは止まる**。既存分の切り出しは着手時にまとめて行う
 
 ## テスト
 

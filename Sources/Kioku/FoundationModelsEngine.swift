@@ -19,16 +19,16 @@ struct FoundationModelsEngine: TranslationEngine {
         case .unavailable(let reason):
             switch reason {
             case .appleIntelligenceNotEnabled:
-                return "システム設定の「Apple IntelligenceとSiri」で有効にしてください。"
+                return String(localized: "システム設定の「Apple IntelligenceとSiri」で有効にしてください。")
             case .modelNotReady:
-                return "モデルの準備中です。しばらく待ってからお試しください。"
+                return String(localized: "モデルの準備中です。しばらく待ってからお試しください。")
             case .deviceNotEligible:
-                return "このMacはApple Intelligenceに対応していません。"
+                return String(localized: "このMacはApple Intelligenceに対応していません。")
             @unknown default:
-                return "Apple Intelligenceを利用できません。"
+                return String(localized: "Apple Intelligenceを利用できません。")
             }
         @unknown default:
-            return "Apple Intelligenceを利用できません。"
+            return String(localized: "Apple Intelligenceを利用できません。")
         }
     }
 
@@ -59,7 +59,7 @@ enum FoundationModelsError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unavailable(let message): return message
-        case .emptyResult: return "生成結果が空でした。"
+        case .emptyResult: return String(localized: "生成結果が空でした。")
         }
     }
 }
