@@ -44,6 +44,7 @@ targets:
     scheme:
       testTargets:
         - KiokuTests
+        - KiokuUITests
 
   # 純粋ロジック（選択フィルタ・言語判定・SRSスケジューラ・JSON抽出）のテスト。
   # AX APIやネットワークに触れる層はテスト対象にしていない
@@ -59,5 +60,20 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.daikitagami.kioku.tests
         DEVELOPMENT_TEAM: C8FHUZ27C7
         CODE_SIGN_STYLE: Automatic
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: true
+
+  # スクリーンショット撮影用。実アプリを操作して撮るので、ユニットテストとは分ける
+  # （遅く、環境に依存する）。make screenshots からのみ回す
+  KiokuUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - Tests/KiokuUITests
+    dependencies:
+      - target: Kioku
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.daikitagami.kioku.uitests
         SWIFT_VERSION: "6.0"
         GENERATE_INFOPLIST_FILE: true

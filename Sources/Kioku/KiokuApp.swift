@@ -4,6 +4,10 @@ import SwiftUI
 struct KiokuApp: App {
     @StateObject private var coordinator = AppCoordinator()
 
+    init() {
+        DemoMode.applyAppearanceOverride()
+    }
+
     var body: some Scene {
         MenuBarExtra {
             MenuView()

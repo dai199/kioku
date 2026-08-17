@@ -131,7 +131,14 @@ struct WeeklyReportRecord: Codable, Identifiable, Sendable,
 
 /// ローカルSQLite（ローカルファースト）。将来のクラウド同期はこの上に載せる。
 final class DatabaseManager: Sendable {
-    static let shared = DatabaseManager()
+    /// デモモードでは見本データのインメモリDBを返す。ここで分岐させておけば、
+    /// 呼び出し側は実DBとの違いを意識せずに済み、撮影中に実データへ触れる経路が無くなる。
+    static let shared: DatabaseManager = {
+        if DemoMode.isEnabled, let demo = try? DemoMode.makeStore() {
+            return demo
+        }
+        return DatabaseManager()
+    }()
 
     let dbQueue: DatabaseQueue
 

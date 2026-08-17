@@ -154,6 +154,9 @@ final class AppSettings: ObservableObject {
     }
 
     func makeEngine() -> TranslationEngine {
+        if DemoMode.isEnabled {
+            return DemoMode.engine
+        }
         switch translationProvider {
         case .appleOnDevice:
             if #available(macOS 26.4, *) {

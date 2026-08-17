@@ -19,7 +19,7 @@ endif
 XCODEBUILD := xcodebuild -project Kioku.xcodeproj -scheme Kioku -configuration Debug \
 	-derivedDataPath $(DERIVED)
 
-.PHONY: generate build run test eval clean
+.PHONY: generate build run test eval screenshots clean
 
 generate:
 	xcodegen generate
@@ -27,8 +27,11 @@ generate:
 build: generate
 	$(XCODEBUILD) $(SIGN) build
 
+# 計測（eval）と撮影（UIテスト）は外す。前者は実APIを叩き、後者は画面を専有するので、
+# 普段のテストに混ぜない
 test: generate
-	$(XCODEBUILD) $(SIGN) -skip-testing:KiokuTests/EngineEvaluation test
+	$(XCODEBUILD) $(SIGN) -skip-testing:KiokuTests/EngineEvaluation \
+		-skip-testing:KiokuUITests test
 
 # エンジン比較の計測。実DBの原文と実APIを使うので、通常のテストとは分けてある。
 # 結果は eval-results/ に書き出す（実データを含むためgit管理外）。
@@ -39,6 +42,22 @@ LIMIT ?= 20
 eval: generate
 	@echo $(LIMIT) > .eval-limit
 	$(XCODEBUILD) $(SIGN) -only-testing:KiokuTests/EngineEvaluation test
+
+# サイト用のスクリーンショットを実アプリから撮る。
+# 画面を専有するので（メニューバーをクリックし、ウィンドウを前面に出し、
+# テキストエディットを操作する）、実行中は触らないこと。
+# 開いているテキストエディットの書類は閉じられるので、先に保存しておくこと。
+# 終わったら通常モードで起動し直す。
+# ランナーはサンドボックス内なのでリポジトリに直接書けない。自分の領域に出させて取り出す
+SHOTS := $(HOME)/Library/Containers/com.daikitagami.kioku.uitests.xctrunner/Data/tmp/kioku-screenshots
+screenshots: build
+	@rm -rf "$(SHOTS)"
+	Scripts/capture-screenshots.sh $(XCODEBUILD) $(SIGN) -only-testing:KiokuUITests test
+	@mkdir -p sites/images
+	@cp "$(SHOTS)"/*.png sites/images/ && echo "→ sites/images/ に取り出しました"
+	@ls -1 sites/images/
+	@pkill -x Kioku || true
+	@open $(APP)
 
 run: build
 	@pkill -x Kioku || true
