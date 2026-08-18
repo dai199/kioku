@@ -13,10 +13,9 @@
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101114" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131311" media="(prefers-color-scheme: dark)">
 
-<!-- og:image はデザイン確定後に足す。無い画像を指すと共有時に壊れて見えるため -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Kioku">
 <meta property="og:url" content="https://kioku.tagamidaiki.com/ja/">
@@ -24,197 +23,272 @@
 <meta property="og:description" content="macOSで選んだテキストをその場で翻訳します。履歴は学習素材として貯まり、週に一度、覚える価値のある表現をAIが選び出します。">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:locale:alternate" content="en_US">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://kioku.tagamidaiki.com/og-ja.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kiokuのアイコンと名前、そして「読んだ英語を、覚えている英語に。」の一行">
+<meta name="twitter:card" content="summary_large_image">
 
 <link rel="stylesheet" href="../style.css">
 </head>
 <body>
 
-<div class="wrap">
-  <header class="top">
-    <a class="brand" href="./">Kioku</a>
-    <a class="lang" href="../">English</a>
-  </header>
+<header class="topbar">
+  <div class="wrap top">
+    <div class="brand">
+      <span class="brand-name">Kioku</span>
+      <span class="chip">macOS menu bar</span>
+    </div>
+    <nav class="top-links">
+      <a href="#loop">仕組み</a>
+      <a href="#screens">画面</a>
+      <a href="#privacy">プライバシー</a>
+      <a href="#install">導入</a>
+      <a class="lang" href="../">EN</a>
+    </nav>
+  </div>
+</header>
 
-  <main>
-    <section class="hero">
-      <div class="demo">
-        <p class="demo-source rise"><mark>確認して折り返します。</mark></p>
-        <p class="demo-arrow rise rise-2">選ぶ → その場で置き換わる</p>
-        <p class="demo-result rise rise-3">I'll look into it and get back to you.</p>
+<main>
+  <section class="wrap hero">
+    <p class="eyebrow">選ぶ → その場で置き換わる</p>
+    <h1 class="hero-title">読んだ英語を、覚えている英語に。</h1>
+    <p class="lede">
+      macOSで選んだテキストをその場で翻訳します。履歴は学習素材として貯まり、
+      週に一度、覚える価値のある表現をAIが選び出します。
+      <strong>英語を日常的に読み書きする人のための、メニューバー常駐アプリです。</strong>
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="#install">ソースからビルドする</a>
+      <a class="btn" href="https://github.com/dai199/kioku">GitHubで見る</a>
+    </div>
+    <div class="frame">
+      <img src="../images/popup-light.png" width="832" height="518"
+           alt="テキストエディットで選んだ日本語の下に、英訳と「置き換える」ボタンを出しているポップアップ">
+    </div>
+    <p class="shot-caption">
+      選ぶと小さなアイコンが出て、クリックすると訳が出ます。
+      「置き換える」を押せば、書いていたその場所の文が入れ替わります。
+    </p>
+  </section>
+
+  <section class="section" id="loop">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="section-title">仕組み</h2>
+        <span class="label">The loop</span>
+        <p class="section-note">一度調べた「確認して折り返します。」が、覚えている英語になるまで。</p>
       </div>
 
-      <p class="lede rise rise-4">
-        macOSで選んだテキストをその場で翻訳します。履歴は学習素材として貯まり、
-        週に一度、覚える価値のある表現をAIが選び出します。
-        <strong>英語を日常的に読み書きする人のための、メニューバー常駐アプリです。</strong>
-      </p>
-
-      <div class="actions rise rise-4">
-        <a class="btn btn-primary" href="#install">ソースからビルドする</a>
-        <a class="btn" href="https://github.com/dai199/kioku">GitHubで見る</a>
-      </div>
-    </section>
-
-    <figure class="shot shot-popup">
-      <picture>
-        <source srcset="../images/popup-dark.png" media="(prefers-color-scheme: dark)">
-        <img src="../images/popup-light.png" width="832" height="518"
-             alt="テキストエディットで選んだ日本語の下に、英訳と「置き換える」ボタンを出しているポップアップ">
-      </picture>
-      <figcaption class="shot-caption">
-        選ぶと小さなアイコンが出て、クリックすると訳が出ます。
-        「置き換える」を押せば、書いていたその場所の文が入れ替わります。
-      </figcaption>
-    </figure>
-
-    <section class="loop">
-      <p class="label">The loop</p>
-      <div class="entries">
-        <div class="entry">
-          <h2 class="entry-word">選ぶ<span class="entry-gloss">select</span></h2>
-          <p class="entry-body">
+      <div class="steps">
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">01</span>
+            <span><span class="step-word">選ぶ</span><span class="step-gloss">Select</span></span>
+          </div>
+          <p class="step-body">
             どのアプリでもテキストを選ぶと、小さなアイコンが出ます。
             クリックするまで何も送信されません。選んだだけでは通信は起きません。
           </p>
+          <div class="step-trace">
+            <div class="trace"><mark>確認して折り返します。</mark></div>
+          </div>
         </div>
-        <div class="entry">
-          <h2 class="entry-word">置き換える<span class="entry-gloss">replace</span></h2>
-          <p class="entry-body">
+
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">02</span>
+            <span><span class="step-word">置き換える</span><span class="step-gloss">Replace</span></span>
+          </div>
+          <p class="step-body">
             英語を書くときは、日本語の下書きを選ぶだけ。採用した英文が
             <em>書いていたその場所で</em>入れ替わります。もっとカジュアルに、
             もっとフォーマルに、もっと短く——納得するまで方向を指定できます。
           </p>
+          <div class="step-trace">
+            <div class="trace">I'll look into it and get back to you.</div>
+          </div>
         </div>
-        <div class="entry">
-          <h2 class="entry-word">貯まる<span class="entry-gloss">accumulate</span></h2>
-          <p class="entry-body">
+
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">03</span>
+            <span><span class="step-word">貯まる</span><span class="step-gloss">Accumulate</span></span>
+          </div>
+          <p class="step-body">
             翻訳はすべて手元に残ります。どのアプリで、いつ調べたかも一緒に。
             多くのツールが捨てている部分ですが、価値があるのはここです。
           </p>
+          <div class="step-trace">
+            <div class="trace trace-meta">
+              <span>テキストエディット</span><span aria-hidden="true">/</span>
+              <span>14:32</span><span aria-hidden="true">/</span>
+              <span>日 → 英</span>
+            </div>
+          </div>
         </div>
-        <div class="entry">
-          <h2 class="entry-word">選ばれる<span class="entry-gloss">curate</span></h2>
-          <p class="entry-body">
+
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">04</span>
+            <span><span class="step-word">選ばれる</span><span class="step-gloss">Curate</span></span>
+          </div>
+          <p class="step-body">
             週に一度、AIが履歴を読んで、繰り返しつまずいているパターンを指摘し、
             カード候補をいくつか提案します。承認したものだけが復習に入ります。
             勝手にカードは増えません。
           </p>
+          <div class="step-trace">
+            <div class="trace trace-approve">
+              <span>get back to you</span>
+              <span class="tag">承認</span>
+            </div>
+          </div>
         </div>
-        <div class="entry">
-          <h2 class="entry-word">覚える<span class="entry-gloss">remember</span></h2>
-          <p class="entry-body">
+
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">05</span>
+            <span><span class="step-word">覚える</span><span class="step-gloss">Remember</span></span>
+          </div>
+          <p class="step-body">
             間隔反復で復習します。3段階の自己評価、1日20枚まで。
             1回のセッションが5分を超えないようにしてあります。
           </p>
+          <div class="step-trace">
+            <div class="trace trace-quiz">
+              <span>確認して折り返します。</span>
+              <span class="mono">→ ?</span>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="screens">
-      <p class="label">画面</p>
+  <section class="section band" id="screens">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="section-title">画面</h2>
+        <span class="label">Screens</span>
+      </div>
 
-      <figure class="shot">
-        <picture>
-          <source srcset="../images/history-dark.png" media="(prefers-color-scheme: dark)">
-          <img src="../images/history-light.png" width="1520" height="1248" loading="lazy"
-               alt="翻訳履歴の一覧。原文と訳文に、方向・アプリ名・調べた時刻が添えられている">
-        </picture>
-        <figcaption class="shot-caption">
-          <strong>翻訳履歴</strong>——いつ、どのアプリで調べたかごと残ります。ここが学習素材になります。
-        </figcaption>
-      </figure>
+      <div class="screens">
+        <figure class="screen">
+          <div class="frame">
+            <img src="../images/history-light.png" width="1520" height="1248" loading="lazy"
+                 alt="翻訳履歴の一覧。原文と訳文に、方向・アプリ名・調べた時刻が添えられている">
+          </div>
+          <figcaption>
+            <strong>翻訳履歴</strong>いつ、どのアプリで調べたかごと残ります。ここが学習素材になります。
+          </figcaption>
+        </figure>
 
-      <figure class="shot">
-        <picture>
-          <source srcset="../images/report-dark.png" media="(prefers-color-scheme: dark)">
-          <img src="../images/report-light.png" width="1520" height="1248" loading="lazy"
-               alt="週次レポート。今週のつまずきパターンと、覚えるカードの候補が並んでいる">
-        </picture>
-        <figcaption class="shot-caption">
-          <strong>週次レポート</strong>——繰り返しつまずいているパターンを指摘し、カード候補を出します。
-          承認したものだけが復習に入ります。
-        </figcaption>
-      </figure>
+        <figure class="screen">
+          <div class="frame">
+            <img src="../images/report-light.png" width="1520" height="1248" loading="lazy"
+                 alt="週次レポート。今週のつまずきパターンと、覚えるカードの候補が並んでいる">
+          </div>
+          <figcaption>
+            <strong>週次レポート</strong>繰り返しつまずいているパターンを指摘し、カード候補を出します。承認したものだけが復習に入ります。
+          </figcaption>
+        </figure>
 
-      <figure class="shot">
-        <picture>
-          <source srcset="../images/review-dark.png" media="(prefers-color-scheme: dark)">
-          <img src="../images/review-light.png" width="1520" height="1248" loading="lazy"
-               alt="復習画面。日本語の問いが出ていて、答えを表示するボタンがある">
-        </picture>
-        <figcaption class="shot-caption">
-          <strong>復習</strong>——間隔反復で出題します。1回が5分を超えないようにしてあります。
-        </figcaption>
-      </figure>
-    </section>
+        <figure class="screen">
+          <div class="frame">
+            <img src="../images/review-light.png" width="1520" height="1248" loading="lazy"
+                 alt="復習画面。日本語の問いが出ていて、答えを表示するボタンがある">
+          </div>
+          <figcaption>
+            <strong>復習</strong>間隔反復で出題します。1回が5分を超えないようにしてあります。
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
 
-    <section class="recall">
-      <p class="label">覚えていますか</p>
+  <section class="section">
+    <div class="wrap recall">
       <div class="recall-card">
+        <div class="section-head">
+          <h2 class="section-title">覚えていますか</h2>
+        </div>
         <p class="recall-front">確認して折り返します。</p>
-        <button class="recall-btn" type="button" data-reveal>英文を表示する</button>
-        <p class="recall-back" hidden data-answer>I'll look into it and get back to you.</p>
+        <div class="recall-slot">
+          <button class="recall-btn" type="button" data-reveal>英文を表示する</button>
+          <p class="recall-back" hidden data-answer>I'll look into it and get back to you.</p>
+        </div>
       </div>
       <p class="recall-note">
         これがこのアプリの考え方そのものです。ページの冒頭で一度見た文を、
         少し経ってから思い出そうとしていただきました。Kiokuは同じことを、
         あなたが実際に出会った英語で、分単位ではなく週単位の間隔で行います。
       </p>
-    </section>
+    </div>
+  </section>
 
-    <section class="privacy">
-      <p class="label">プライバシー</p>
-      <ul class="privacy-list">
-        <li>
-          <strong>クリックするまで何も送りません。</strong>
-          <span>選択した時点ではアイコンが出るだけで、通信は発生しません。</span>
-        </li>
-        <li>
-          <strong>そもそも一切送らない選択肢があります。</strong>
-          <span>Apple のオンデバイス翻訳を選べば、テキストはMacから出ません。オフラインで動き、費用もかかりません。</span>
-        </li>
-        <li>
-          <strong>Kiokuのサーバーは存在しません。</strong>
-          <span>APIキーはあなたのものです。テキストはあなたのMacから、あなたが設定したプロバイダへ直接送られます。</span>
-        </li>
-        <li>
-          <strong>初めから除外されているアプリがあります。</strong>
-          <span>パスワードマネージャーは既定で除外済みで、任意のアプリを追加できます。除外したアプリではアイコン自体が出ません。</span>
-        </li>
-        <li>
-          <strong>履歴は手元に残ります。</strong>
-          <span>翻訳・カード・レポートは、自分で中身を確認したり削除したりできるローカルのデータベースに保存されます。</span>
-        </li>
-      </ul>
-    </section>
+  <section class="section band" id="privacy">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="section-title">プライバシー</h2>
+        <span class="label">Privacy</span>
+      </div>
 
-    <section class="install" id="install">
-      <p class="label">導入</p>
-      <p class="note" style="margin-bottom:1.25rem">
-        まだ公証を通していないため、ビルド済みの配布物はありません。ソースからビルドしてください。
-        読めるコードを自分で動かす形なので、Gatekeeperの警告を回避する必要もありません。
-        macOS 26 と Xcode が必要です。
-      </p>
-      <pre><code>brew install xcodegen
-git clone https://github.com/dai199/kioku.git
-cd kioku
-make run</code></pre>
-      <p class="note">
-        選択したテキストを読むためにアクセシビリティ権限が必要です。同じ理由で
-        Mac App Store では配布できません。詳しい手順は
-        <a href="https://github.com/dai199/kioku/blob/main/README.ja.md">README</a> にあります。
-      </p>
-    </section>
-  </main>
+      <dl class="privacy">
+        <div class="privacy-row">
+          <dt>クリックするまで何も送りません。</dt>
+          <dd>選択した時点ではアイコンが出るだけで、通信は発生しません。</dd>
+        </div>
+        <div class="privacy-row">
+          <dt>そもそも一切送らない選択肢があります。</dt>
+          <dd>Apple のオンデバイス翻訳を選べば、テキストはMacから出ません。オフラインで動き、費用もかかりません。</dd>
+        </div>
+        <div class="privacy-row">
+          <dt>Kiokuのサーバーは存在しません。</dt>
+          <dd>APIキーはあなたのものです。テキストはあなたのMacから、あなたが設定したプロバイダへ直接送られます。</dd>
+        </div>
+        <div class="privacy-row">
+          <dt>初めから除外されているアプリがあります。</dt>
+          <dd>パスワードマネージャーは既定で除外済みで、任意のアプリを追加できます。除外したアプリではアイコン自体が出ません。</dd>
+        </div>
+        <div class="privacy-row">
+          <dt>履歴は手元に残ります。</dt>
+          <dd>翻訳・カード・レポートは、自分で中身を確認したり削除したりできるローカルのデータベースに保存されます。</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
 
-  <footer class="foot">
-    <span>AGPL-3.0</span>
-    <span>© 2026 Tagami Daiki</span>
+  <section class="section" id="install">
+    <div class="wrap install">
+      <div>
+        <div class="section-head">
+          <h2 class="section-title">導入</h2>
+          <span class="label">Install</span>
+        </div>
+        <p>
+          まだ公証を通していないため、ビルド済みの配布物はありません。ソースからビルドしてください。
+          読めるコードを自分で動かす形なので、Gatekeeperの警告を回避する必要もありません。
+          macOS 26 と Xcode が必要です。
+        </p>
+        <p>
+          選択したテキストを読むためにアクセシビリティ権限が必要です。同じ理由で
+          Mac App Store では配布できません。詳しい手順は
+          <a href="https://github.com/dai199/kioku/blob/main/README.ja.md">README</a> にあります。
+        </p>
+      </div>
+      <pre class="terminal"><span class="terminal-label">TERMINAL</span><code>brew install xcodegen</code><code>git clone https://github.com/dai199/kioku.git</code><code>cd kioku</code><code>make run</code></pre>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <span>AGPL-3.0 © 2026 Tagami Daiki</span>
+  <span class="foot-links">
     <a href="https://github.com/dai199/kioku">ソース</a>
     <a href="../">English</a>
-  </footer>
-</div>
+  </span>
+</footer>
 
 <script src="../script.js" defer></script>
 </body>

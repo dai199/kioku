@@ -1,36 +1,47 @@
 /* Kioku — 紹介サイト
    地の文はシステムUIフォント。アプリ自体がmacOSに溶け込む設計なので、
    サイトも同じ地の文で立てる。日英が同じ行に並ぶため、欧文だけ別書体にすると噛み合わない。
-   意味を持つ色はテキスト選択の青だけ。選択を描くときにしか使わない。 */
+   ダークを基本に組み、ライト設定の閲覧者向けに同じ構造で色だけ差し替える。 */
 
 :root {
-  --paper: #fbfbfa;
-  --ink: #17181b;
-  --muted: #6b6f76;
-  --rule: #e4e4e0;
-  --select: #b4d5fe;   /* 選択ハイライト。製品の起動ジェスチャそのもの */
-  --accent: #1b4fd8;
-  --card: #ffffff;
+  --bg: #131311;
+  --band: #171714;       /* 節ごとに地を一段落とす */
+  --card: #1a1a17;
+  --rule: #262622;
+  --rule-strong: #34342e;
+  --ink: #eceae4;
+  --muted: #a09d95;
+  --faint: #7d7b74;
+  --accent: oklch(0.78 0.13 145);
+  --accent-hover: oklch(0.84 0.13 145);
+  --accent-text: oklch(0.86 0.09 145);
+  --on-accent: #0f120e;
+  --mark: #2c3a2b;       /* 追跡している一文のハイライト。選択そのものを描く色 */
 
   --sans: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN",
     "Noto Sans JP", "Yu Gothic", sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 
-  /* 本文の読みやすい幅。段全体もこれに合わせて締める。
-     区切り線が本文よりずっと右まで伸びると、余白が意図的に見えない */
-  --measure: 36rem;
-  --gap: clamp(4.5rem, 11vw, 8rem);
+  --wrap: 64rem;
+  --pad: clamp(1.25rem, 5vw, 4rem);
+  --gap: clamp(3.5rem, 7vw, 4.5rem);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    --paper: #101114;
-    --ink: #eceded;
-    --muted: #8f949c;
-    --rule: #26282d;
-    --select: #1e4f96;
-    --accent: #86b0ff;
-    --card: #17191d;
+    --bg: #faf9f7;
+    --band: #f2f1ed;
+    --card: #ffffff;
+    --rule: #e4e2db;
+    --rule-strong: #d5d2c9;
+    --ink: #1c1b17;
+    --muted: #57544d;
+    --faint: #837f76;
+    --accent: oklch(0.52 0.13 145);
+    --accent-hover: oklch(0.45 0.13 145);
+    --accent-text: oklch(0.45 0.13 145);
+    --on-accent: #ffffff;
+    --mark: #cfe6c8;
   }
 }
 
@@ -40,311 +51,405 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 17px;
-  line-height: 1.75;
+  font-size: 16px;
+  line-height: 1.9;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "palt" 1;   /* 日本語の詰め */
 }
 
-::selection { background: var(--select); color: var(--ink); }
+::selection { background: var(--mark); color: var(--ink); }
 
-a { color: inherit; }
+a { color: inherit; text-decoration: none; }
+
+img { display: block; width: 100%; height: auto; }
 
 .wrap {
-  width: min(100% - 2.5rem, 50rem);
+  width: min(100% - (var(--pad) * 2), var(--wrap));
   margin-inline: auto;
 }
 
-/* ── 見出しラベル（等幅・字送り広め）。辞書の項目名の役 ── */
+/* ── 節の見出し。緑の細い縦棒＋和名＋英字ラベル ── */
+.section { padding: var(--gap) 0; border-top: 1px solid var(--rule); }
+.section.band { background: var(--band); }
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.9rem;
+  margin-bottom: clamp(1.75rem, 4vw, 2.25rem);
+}
+
+.section-head::before {
+  content: "";
+  width: 3px;
+  align-self: center;
+  height: 1.375rem;
+  background: var(--accent);
+}
+
+.section-title { font-size: 1.3rem; font-weight: 700; margin: 0; }
+
 .label {
   font-family: var(--mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 1.25rem;
+  color: var(--faint);
 }
+
+.section-note { margin: 0 0 0 auto; font-size: 0.85rem; color: var(--muted); }
 
 /* ── ヘッダ ── */
+.topbar { border-bottom: 1px solid var(--rule); }
+
 .top {
   display: flex;
-  align-items: baseline;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.75rem 0;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 1.125rem 0;
 }
 
-.brand {
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  text-decoration: none;
+.brand { display: flex; align-items: center; gap: 0.7rem; }
+
+/* メニューバーに常駐していることを、丸ひとつで示す */
+.brand::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
-.lang {
+.brand-name { font-size: 1.0625rem; font-weight: 700; letter-spacing: 0.06em; }
+
+.chip {
   font-family: var(--mono);
-  font-size: 0.78rem;
-  color: var(--muted);
-  text-decoration: none;
+  font-size: 0.6875rem;
+  color: var(--faint);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
 }
-.lang:hover { color: var(--ink); }
 
-/* ── ヒーロー: 実際の翻訳が1件起きている ── */
-.hero { padding: clamp(3rem, 9vw, 6rem) 0 var(--gap); }
+.top-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.4rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
 
-.demo { margin: 0 0 clamp(2.5rem, 5vw, 3.5rem); }
+.top-links a:hover { color: var(--ink); }
+.top-links .lang { font-family: var(--mono); }
 
-.demo-source {
-  font-size: clamp(1.5rem, 4.4vw, 2.25rem);
-  line-height: 1.5;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+/* ── ヒーロー ── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.6rem;
+  padding: clamp(3rem, 8vw, 4.75rem) 0 var(--gap);
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  color: var(--accent-text);
   margin: 0;
 }
 
-/* 選択されている状態そのものを描く */
-.demo-source mark {
-  background: var(--select);
-  color: inherit;
-  padding: 0.12em 0.06em;
-  border-radius: 2px;
-}
-
-.demo-arrow {
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  color: var(--muted);
-  margin: 0.9rem 0 0.75rem;
-}
-
-.demo-result {
-  font-size: clamp(1.5rem, 4.4vw, 2.25rem);
-  line-height: 1.45;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+.hero-title {
   margin: 0;
+  font-size: clamp(2rem, 5.5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .lede {
-  max-width: var(--measure);
-  font-size: 1.0625rem;
+  margin: 0;
+  max-width: 38em;
+  line-height: 2.05;
   color: var(--muted);
-  margin: 0 0 2.25rem;
+  text-wrap: pretty;
 }
-.lede strong { color: var(--ink); font-weight: 600; }
 
-.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.lede strong { color: var(--ink); font-weight: 700; }
+
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
 
 .btn {
-  display: inline-block;
   font-size: 0.9375rem;
-  font-weight: 500;
-  padding: 0.6rem 1.1rem;
-  border-radius: 8px;
-  text-decoration: none;
-  border: 1px solid var(--rule);
-  transition: background-color 0.12s ease, border-color 0.12s ease;
+  padding: 0.8rem 1.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
 }
-.btn:hover { border-color: var(--ink); }
+
+.btn:hover { border-color: var(--faint); }
 
 .btn-primary {
-  background: var(--ink);
-  color: var(--paper);
-  border-color: var(--ink);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
 }
-.btn-primary:hover { opacity: 0.85; }
 
-/* ── 循環: 辞書の見出し語のように、日本語の動詞で立てる ── */
-.loop { padding-bottom: var(--gap); }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 
-.entries {
-  border-top: 1px solid var(--rule);
+/* ── 実物の画面。撮ったままを枠に収める ── */
+.frame {
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 0.875rem;
+}
+
+.frame img { border-radius: 6px; }
+
+.hero .frame { width: 100%; max-width: 55rem; margin-top: 0.25rem; }
+
+.shot-caption {
   margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.9;
+  color: var(--faint);
+  max-width: 48em;
 }
 
-.entry {
+/* ── 仕組み: 一文が追跡されていく様子を右の列に並べる ── */
+.steps { border-top: 1px solid var(--rule); }
+
+.step {
   display: grid;
-  grid-template-columns: 7.5rem 1fr;
-  gap: 0 2rem;
-  padding: 1.75rem 0;
+  grid-template-columns: 9.5rem 1fr 19rem;
   border-bottom: 1px solid var(--rule);
-  margin: 0;
 }
 
-.entry-word {
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  margin: 0;
+.step-name { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1.375rem 0; }
+
+.step-no {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  color: var(--accent-text);
+  padding-top: 0.45rem;
 }
 
-.entry-gloss {
+.step-word { font-size: 1.1875rem; font-weight: 700; line-height: 1.6; }
+
+.step-gloss {
   display: block;
   font-family: var(--mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
-  font-weight: 400;
-  margin-top: 0.35rem;
+  color: var(--faint);
+  margin-top: 0.2rem;
 }
 
-.entry-body { margin: 0; max-width: var(--measure); }
-.entry-body em {
+.step-body {
+  margin: 0;
+  padding: 1.375rem 1.75rem;
+  border-left: 1px solid var(--rule);
+  font-size: 0.85rem;
+  line-height: 1.95;
+  color: var(--muted);
+}
+
+.step-body em {
   font-style: normal;
-  background: var(--select);
+  color: var(--ink);
+  background: var(--mark);
   padding: 0.05em 0.2em;
   border-radius: 2px;
 }
 
-/* ── 実物の画面: 撮ったままを置く。角の抜きも影もアプリのもの ── */
-.shot { margin: 0; }
+.step-trace { display: flex; align-items: center; padding: 1.375rem 0; }
 
-.shot img {
-  display: block;
+/* 追跡している一文が、段ごとに姿を変えていく */
+.trace {
   width: 100%;
-  height: auto;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.75rem 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.7;
 }
 
-/* ポップアップは実際に画面へ出る大きさのまま置く。引き伸ばすと嘘になる */
-.shot-popup {
-  max-width: 27rem;
-  margin-bottom: var(--gap);
+.trace mark {
+  background: var(--mark);
+  color: var(--ink);
+  box-shadow: 0 0 0 3px var(--mark);
 }
 
-.shot-caption {
-  font-size: 0.9rem;
-  line-height: 1.65;
+.trace-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
   color: var(--muted);
-  max-width: var(--measure);
-  margin: 0.9rem 0 0;
 }
 
-.screens { padding-bottom: var(--gap); }
-.screens .shot + .shot { margin-top: clamp(2.5rem, 6vw, 4rem); }
+.trace-meta span[aria-hidden] { color: var(--rule-strong); }
 
-/* ── 想起の瞬間: 冒頭の文がもう一度、英語を隠して現れる ── */
-.recall { padding-bottom: var(--gap); }
+.trace-approve { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+
+.tag {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.trace-quiz { display: flex; align-items: center; gap: 0.5rem; }
+.trace-quiz .mono { font-family: var(--mono); font-size: 0.7rem; color: var(--faint); }
+
+/* ── 画面 ── */
+.screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+
+.screen { display: flex; flex-direction: column; gap: 1rem; }
+
+.screen figcaption {
+  font-size: 0.8125rem;
+  line-height: 1.95;
+  color: var(--muted);
+}
+
+.screen strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.9375rem;
+  margin-bottom: 0.35rem;
+}
+
+/* ── 想起の瞬間: 冒頭で一度見た文を、押したときだけ英語にする ── */
+.recall { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
 
 .recall-card {
   background: var(--card);
   border: 1px solid var(--rule);
-  border-radius: 14px;
-  padding: clamp(1.75rem, 5vw, 2.75rem);
-  max-width: 30rem;
+  border-radius: 10px;
+  padding: clamp(1.5rem, 4vw, 2.125rem);
 }
 
-.recall-front {
-  font-size: 1.375rem;
-  font-weight: 600;
-  line-height: 1.5;
-  margin: 0 0 1.5rem;
-}
+.recall-card .section-head { margin-bottom: 1.25rem; }
+
+.recall-front { font-size: 1.75rem; font-weight: 700; line-height: 1.6; margin: 0; }
+
+.recall-slot { margin-top: 1.375rem; min-height: 2.75rem; display: flex; align-items: center; }
 
 .recall-back {
-  font-size: 1.375rem;
-  font-weight: 600;
-  line-height: 1.45;
-  letter-spacing: -0.01em;
   margin: 0;
-  color: var(--accent);
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--accent-text);
 }
 
 .recall-btn {
-  font-family: var(--mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--ink);
   background: none;
-  border: 1px dashed var(--rule);
-  border-radius: 8px;
-  padding: 0.65rem 1rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  padding: 0.7rem 1.375rem;
   cursor: pointer;
-  font-weight: 400;
 }
-.recall-btn:hover { color: var(--ink); border-color: var(--muted); }
 
-[hidden] { display: none !important; }
+.recall-btn:hover { border-color: var(--accent); }
 
-.recall-note {
-  font-size: 0.9375rem;
-  color: var(--muted);
-  max-width: var(--measure);
-  margin: 1.5rem 0 0;
-}
+.recall-note { margin: 0; line-height: 2.1; color: var(--muted); text-wrap: pretty; }
 
 /* ── プライバシー ── */
-.privacy { padding-bottom: var(--gap); }
+.privacy { border-top: 1px solid var(--rule); }
 
-.privacy-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.privacy-row {
   display: grid;
-  gap: 1.25rem;
-  max-width: 44rem;
+  grid-template-columns: 21rem 1fr;
+  gap: 0.25rem 2rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--rule);
 }
 
-.privacy-list li {
-  padding-left: 1.25rem;
-  border-left: 2px solid var(--rule);
-  max-width: var(--measure);
-}
-.privacy-list strong { font-weight: 600; }
-.privacy-list span { display: block; color: var(--muted); font-size: 0.9375rem; }
+.privacy-row dt { font-size: 0.9375rem; font-weight: 700; }
+.privacy-row dd { margin: 0; font-size: 0.875rem; line-height: 1.95; color: var(--muted); }
 
 /* ── 導入 ── */
-.install { padding-bottom: var(--gap); }
+.install { display: grid; grid-template-columns: 1fr 1fr; gap: 2.75rem; }
 
-pre {
-  font-family: var(--mono);
-  font-size: 0.8125rem;
-  line-height: 1.9;
-  background: var(--card);
+.install p { margin: 0 0 1.125rem; line-height: 2; color: var(--muted); text-wrap: pretty; }
+.install p:last-child { margin-bottom: 0; font-size: 0.875rem; color: var(--faint); }
+.install a { color: var(--accent-text); }
+
+/* ターミナルはライトでも暗いまま。実物がそうなので、ここだけは地に合わせない */
+.terminal {
+  align-self: start;
+  background: #0d0d0c;
   border: 1px solid var(--rule);
   border-radius: 10px;
-  padding: 1.1rem 1.25rem;
+  padding: 1.5rem 1.625rem;
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 2.1;
+  color: #cfccc4;
   overflow-x: auto;
-  margin: 0 0 1.25rem;
-  max-width: 38rem;
 }
 
-.note { font-size: 0.9375rem; color: var(--muted); max-width: var(--measure); margin: 0; }
-.note a { text-decoration-color: var(--rule); }
+.terminal-label {
+  display: block;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  color: #5e5c56;
+  margin-bottom: 0.6rem;
+}
+
+.terminal code { display: block; white-space: pre; }
+.terminal code::before { content: "$ "; color: oklch(0.78 0.13 145); }
 
 /* ── フッタ ── */
 .foot {
-  border-top: 1px solid var(--rule);
-  padding: 2rem 0 3.5rem;
-  font-size: 0.875rem;
-  color: var(--muted);
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding: 1.625rem 0;
+  border-top: 1px solid var(--rule);
+  font-size: 0.8125rem;
+  color: var(--faint);
 }
 
-/* ── 出現。アプリのポップアップと同じ性質（フェード＋わずかな上昇） ── */
-@media (prefers-reduced-motion: no-preference) {
-  .rise { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
-  .rise-2 { animation-delay: 0.16s; }
-  .rise-3 { animation-delay: 0.28s; }
-  .rise-4 { animation-delay: 0.38s; }
-}
+.foot-links { display: flex; gap: 1.375rem; }
+.foot a:hover { color: var(--ink); }
 
-@keyframes rise {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
-}
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 4px;
+/* ── 狭い画面: 3列を積む ── */
+@media (max-width: 60rem) {
+  .step { grid-template-columns: 8.5rem 1fr; }
+  .step-trace { grid-column: 1 / -1; padding-top: 0; }
+  .screens { grid-template-columns: 1fr; }
+  .recall, .install { grid-template-columns: 1fr; gap: 2rem; }
+  .privacy-row { grid-template-columns: 1fr; }
+  .section-note { margin-left: 0; flex-basis: 100%; }
 }
 
 @media (max-width: 40rem) {
-  .entry { grid-template-columns: 1fr; gap: 0.5rem; }
+  .step { grid-template-columns: 1fr; }
+  .step-name { padding-bottom: 0; }
+  .step-body { border-left: 0; padding: 0.5rem 0 1.375rem; }
+  .step-trace { padding-bottom: 1.375rem; }
+  .chip { display: none; }
 }

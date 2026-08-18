@@ -13,10 +13,9 @@
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101114" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131311" media="(prefers-color-scheme: dark)">
 
-<!-- og:image はデザイン確定後に足す。無い画像を指すと共有時に壊れて見えるため -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Kioku">
 <meta property="og:url" content="https://kioku.tagamidaiki.com/">
@@ -24,199 +23,272 @@
 <meta property="og:description" content="Translate any text you select on macOS. Your history becomes study material — and each week, AI picks the expressions worth keeping.">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="ja_JP">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://kioku.tagamidaiki.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Kioku — the app icon, its name, and the line: translate what you read, remember what matters.">
+<meta name="twitter:card" content="summary_large_image">
 
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-<div class="wrap">
-  <header class="top">
-    <a class="brand" href="./">Kioku</a>
-    <a class="lang" href="./ja/">日本語</a>
-  </header>
+<header class="topbar">
+  <div class="wrap top">
+    <div class="brand">
+      <span class="brand-name">Kioku</span>
+      <span class="chip">macOS menu bar</span>
+    </div>
+    <nav class="top-links">
+      <a href="#loop">How it works</a>
+      <a href="#screens">Screens</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#install">Install</a>
+      <a class="lang" href="./ja/">日本語</a>
+    </nav>
+  </div>
+</header>
 
-  <main>
-    <section class="hero">
-      <div class="demo">
-        <p class="demo-source rise"><mark>確認して折り返します。</mark></p>
-        <p class="demo-arrow rise rise-2">selected → translated in place</p>
-        <p class="demo-result rise rise-3">I'll look into it and get back to you.</p>
+<main>
+  <section class="wrap hero">
+    <p class="eyebrow">selected → translated in place</p>
+    <h1 class="hero-title">Translate what you read.<br>Remember what matters.</h1>
+    <p class="lede">
+      Kioku translates any text you select on macOS. Your history becomes study
+      material — and each week, AI picks the expressions worth keeping.
+      <strong>A menu bar app for Japanese speakers who read and write English every day.</strong>
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="#install">Build from source</a>
+      <a class="btn" href="https://github.com/dai199/kioku">View on GitHub</a>
+    </div>
+    <div class="frame">
+      <img src="./images/popup-light.png" width="832" height="518"
+           alt="A popup under a Japanese sentence selected in TextEdit, showing the English translation and a replace button">
+    </div>
+    <p class="shot-caption">
+      Select, click the icon, read the translation. Press 置き換える and the
+      sentence is swapped right where you were typing.
+    </p>
+  </section>
+
+  <section class="section" id="loop">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="section-title">How it works</h2>
+        <span class="label">The loop</span>
+        <p class="section-note">One sentence, followed from the moment you look it up to the moment you know it.</p>
       </div>
 
-      <p class="lede rise rise-4">
-        Kioku translates any text you select on macOS. Your history becomes study
-        material — and each week, AI picks the expressions worth keeping.
-        <strong>A menu bar app for Japanese speakers who read and write English every day.</strong>
-      </p>
-
-      <div class="actions rise rise-4">
-        <a class="btn btn-primary" href="#install">Build from source</a>
-        <a class="btn" href="https://github.com/dai199/kioku">View on GitHub</a>
-      </div>
-    </section>
-
-    <figure class="shot shot-popup">
-      <picture>
-        <source srcset="images/popup-dark.png" media="(prefers-color-scheme: dark)">
-        <img src="images/popup-light.png" width="832" height="518"
-             alt="A popup under a Japanese sentence selected in TextEdit, showing the English translation and a replace button">
-      </picture>
-      <figcaption class="shot-caption">
-        Select, click the icon, read the translation. Press 置き換える and the
-        sentence is swapped right where you were typing.
-      </figcaption>
-    </figure>
-
-    <section class="loop">
-      <p class="label">The loop</p>
-      <div class="entries">
-        <div class="entry">
-          <h2 class="entry-word">選ぶ<span class="entry-gloss">select</span></h2>
-          <p class="entry-body">
-            Select text in any app and a small icon appears. Nothing is sent
-            anywhere until you click it — selecting alone never touches the network.
+      <div class="steps">
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">01</span>
+            <span><span class="step-word">選ぶ</span><span class="step-gloss">Select</span></span>
+          </div>
+          <p class="step-body">
+            Select text in any app and a small icon appears. Nothing is sent anywhere
+            until you click it — selecting alone never touches the network.
           </p>
+          <div class="step-trace">
+            <div class="trace"><mark>確認して折り返します。</mark></div>
+          </div>
         </div>
-        <div class="entry">
-          <h2 class="entry-word">置き換える<span class="entry-gloss">replace</span></h2>
-          <p class="entry-body">
-            Writing in English? Select your Japanese draft and Kioku swaps it for
-            the English you pick, <em>right where you were typing</em>. Ask for a
-            different tone — more casual, more formal, shorter — until it sounds right.
+
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">02</span>
+            <span><span class="step-word">置き換える</span><span class="step-gloss">Replace</span></span>
+          </div>
+          <p class="step-body">
+            Writing in English? Select your Japanese draft and Kioku swaps it for the
+            English you pick, <em>right where you were typing</em>. Ask for a different
+            tone — more casual, more formal, shorter — until it sounds right.
           </p>
+          <div class="step-trace">
+            <div class="trace">I'll look into it and get back to you.</div>
+          </div>
         </div>
-        <div class="entry">
-          <h2 class="entry-word">貯まる<span class="entry-gloss">accumulate</span></h2>
-          <p class="entry-body">
+
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">03</span>
+            <span><span class="step-word">貯まる</span><span class="step-gloss">Accumulate</span></span>
+          </div>
+          <p class="step-body">
             Every translation is kept locally, with the app you were in and when.
             This is the part most tools throw away, and it is the part worth keeping.
           </p>
+          <div class="step-trace">
+            <div class="trace trace-meta">
+              <span>TextEdit</span><span aria-hidden="true">/</span>
+              <span>14:32</span><span aria-hidden="true">/</span>
+              <span>JA → EN</span>
+            </div>
+          </div>
         </div>
-        <div class="entry">
-          <h2 class="entry-word">選ばれる<span class="entry-gloss">curate</span></h2>
-          <p class="entry-body">
+
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">04</span>
+            <span><span class="step-word">選ばれる</span><span class="step-gloss">Curate</span></span>
+          </div>
+          <p class="step-body">
             Once a week, an AI reads your history, points out the patterns you keep
             stumbling on, and proposes a handful of flashcards. You approve the ones
             you want. Nothing becomes a card without your say-so.
           </p>
+          <div class="step-trace">
+            <div class="trace trace-approve">
+              <span>get back to you</span>
+              <span class="tag">approve</span>
+            </div>
+          </div>
         </div>
-        <div class="entry">
-          <h2 class="entry-word">覚える<span class="entry-gloss">remember</span></h2>
-          <p class="entry-body">
+
+        <div class="step">
+          <div class="step-name">
+            <span class="step-no">05</span>
+            <span><span class="step-word">覚える</span><span class="step-gloss">Remember</span></span>
+          </div>
+          <p class="step-body">
             Review with spaced repetition — three ratings, twenty cards a day at
             most, so a session stays under five minutes.
           </p>
+          <div class="step-trace">
+            <div class="trace trace-quiz">
+              <span>確認して折り返します。</span>
+              <span class="mono">→ ?</span>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="screens">
-      <p class="label">The app</p>
+  <section class="section band" id="screens">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="section-title">The app</h2>
+        <span class="label">Screens</span>
+      </div>
 
-      <figure class="shot">
-        <picture>
-          <source srcset="images/history-dark.png" media="(prefers-color-scheme: dark)">
-          <img src="images/history-light.png" width="1520" height="1248" loading="lazy"
-               alt="The translation history list: source and translation, each tagged with direction, app and time">
-        </picture>
-        <figcaption class="shot-caption">
-          <strong>History</strong> — every translation stays, along with the app you
-          were in and when. This is what the weekly report reads.
-        </figcaption>
-      </figure>
+      <div class="screens">
+        <figure class="screen">
+          <div class="frame">
+            <img src="./images/history-light.png" width="1520" height="1248" loading="lazy"
+                 alt="The translation history list: source and translation, each tagged with direction, app and time">
+          </div>
+          <figcaption>
+            <strong>History</strong>Every translation stays, along with the app you were in and when. This is what the weekly report reads.
+          </figcaption>
+        </figure>
 
-      <figure class="shot">
-        <picture>
-          <source srcset="images/report-dark.png" media="(prefers-color-scheme: dark)">
-          <img src="images/report-light.png" width="1520" height="1248" loading="lazy"
-               alt="The weekly report: patterns you keep stumbling on, followed by proposed flashcards">
-        </picture>
-        <figcaption class="shot-caption">
-          <strong>Weekly report</strong> — the patterns you keep stumbling on, and a
-          handful of proposed cards. Only the ones you approve enter review.
-        </figcaption>
-      </figure>
+        <figure class="screen">
+          <div class="frame">
+            <img src="./images/report-light.png" width="1520" height="1248" loading="lazy"
+                 alt="The weekly report: patterns you keep stumbling on, followed by proposed flashcards">
+          </div>
+          <figcaption>
+            <strong>Weekly report</strong>The patterns you keep stumbling on, and a handful of proposed cards. Only the ones you approve enter review.
+          </figcaption>
+        </figure>
 
-      <figure class="shot">
-        <picture>
-          <source srcset="images/review-dark.png" media="(prefers-color-scheme: dark)">
-          <img src="images/review-light.png" width="1520" height="1248" loading="lazy"
-               alt="The review screen: a Japanese prompt with a button to show the English">
-        </picture>
-        <figcaption class="shot-caption">
-          <strong>Review</strong> — spaced repetition, kept short enough to finish in
-          five minutes. The interface is in Japanese; English localisation is planned.
-        </figcaption>
-      </figure>
-    </section>
+        <figure class="screen">
+          <div class="frame">
+            <img src="./images/review-light.png" width="1520" height="1248" loading="lazy"
+                 alt="The review screen: a Japanese prompt with a button to show the English">
+          </div>
+          <figcaption>
+            <strong>Review</strong>Spaced repetition, kept short enough to finish in five minutes. The interface is in Japanese; English localisation is planned.
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
 
-    <section class="recall">
-      <p class="label">Still with us?</p>
+  <section class="section">
+    <div class="wrap recall">
       <div class="recall-card">
+        <div class="section-head">
+          <h2 class="section-title">Still with us?</h2>
+        </div>
         <p class="recall-front">確認して折り返します。</p>
-        <button class="recall-btn" type="button" data-reveal>Show the English</button>
-        <p class="recall-back" hidden data-answer>I'll look into it and get back to you.</p>
+        <div class="recall-slot">
+          <button class="recall-btn" type="button" data-reveal>Show the English</button>
+          <p class="recall-back" hidden data-answer>I'll look into it and get back to you.</p>
+        </div>
       </div>
       <p class="recall-note">
         That is the whole idea. You saw this phrase once at the top of the page, and
         a minute later you were asked to recall it. Kioku does the same thing with
-        the English you actually run into, spaced out over weeks instead of minutes.
+        the English you actually run into, spaced in weeks rather than minutes.
       </p>
-    </section>
+    </div>
+  </section>
 
-    <section class="privacy">
-      <p class="label">Privacy</p>
-      <ul class="privacy-list">
-        <li>
-          <strong>Nothing is sent until you click.</strong>
-          <span>Selecting text only shows an icon. No request happens until you act on it.</span>
-        </li>
-        <li>
-          <strong>Or choose an engine that never sends anything.</strong>
-          <span>With Apple's on-device translation, nothing leaves your Mac. It works offline and costs nothing.</span>
-        </li>
-        <li>
-          <strong>There is no Kioku server.</strong>
-          <span>You bring your own API key. Text goes from your Mac to the provider you configured, and nowhere else.</span>
-        </li>
-        <li>
-          <strong>Some apps are excluded outright.</strong>
-          <span>Password managers are excluded by default, and you can add any app. There, the icon never appears at all.</span>
-        </li>
-        <li>
-          <strong>Your history stays on your machine.</strong>
-          <span>Translations, cards, and reports live in a local database you can inspect or delete.</span>
-        </li>
-      </ul>
-    </section>
+  <section class="section band" id="privacy">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="section-title">Privacy</h2>
+        <span class="label">Privacy</span>
+      </div>
 
-    <section class="install" id="install">
-      <p class="label">Install</p>
-      <p class="note" style="margin-bottom:1.25rem">
-        Kioku is not notarized yet, so there is no prebuilt download. Build it from
-        source — you run what you can read, and there is no Gatekeeper warning to
-        work around. Requires macOS 26 and Xcode.
-      </p>
-      <pre><code>brew install xcodegen
-git clone https://github.com/dai199/kioku.git
-cd kioku
-make run</code></pre>
-      <p class="note">
-        Kioku needs Accessibility permission to read the text you select, and it
-        cannot ship on the Mac App Store for the same reason. Full setup notes are in
-        the <a href="https://github.com/dai199/kioku#readme">README</a>.
-      </p>
-    </section>
-  </main>
+      <dl class="privacy">
+        <div class="privacy-row">
+          <dt>Nothing is sent until you click.</dt>
+          <dd>Selecting text only brings up an icon. No network request happens.</dd>
+        </div>
+        <div class="privacy-row">
+          <dt>You can choose to send nothing at all.</dt>
+          <dd>Pick Apple's on-device translation and your text never leaves the Mac. It works offline, and costs nothing.</dd>
+        </div>
+        <div class="privacy-row">
+          <dt>There is no Kioku server.</dt>
+          <dd>The API key is yours. Text goes from your Mac straight to the provider you configured.</dd>
+        </div>
+        <div class="privacy-row">
+          <dt>Some apps are excluded from the start.</dt>
+          <dd>Password managers are excluded by default, and you can add any app. In an excluded app the icon never appears.</dd>
+        </div>
+        <div class="privacy-row">
+          <dt>Your history stays with you.</dt>
+          <dd>Translations, cards and reports live in a local database you can inspect or delete yourself.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
 
-  <footer class="foot">
-    <span>AGPL-3.0</span>
-    <span>© 2026 Tagami Daiki</span>
+  <section class="section" id="install">
+    <div class="wrap install">
+      <div>
+        <div class="section-head">
+          <h2 class="section-title">Install</h2>
+          <span class="label">Install</span>
+        </div>
+        <p>
+          Kioku is not notarised yet, so there is no prebuilt download. Build it from
+          source instead — you run code you can read, and there is no Gatekeeper
+          warning to work around. macOS 26 and Xcode are required.
+        </p>
+        <p>
+          Accessibility permission is needed to read the text you select. That same
+          requirement is why Kioku cannot ship on the Mac App Store. Full steps are in the
+          <a href="https://github.com/dai199/kioku/blob/main/README.md">README</a>.
+        </p>
+      </div>
+      <pre class="terminal"><span class="terminal-label">TERMINAL</span><code>brew install xcodegen</code><code>git clone https://github.com/dai199/kioku.git</code><code>cd kioku</code><code>make run</code></pre>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <span>AGPL-3.0 © 2026 Tagami Daiki</span>
+  <span class="foot-links">
     <a href="https://github.com/dai199/kioku">Source</a>
     <a href="./ja/">日本語</a>
-  </footer>
-</div>
+  </span>
+</footer>
 
 <script src="./script.js" defer></script>
 </body>

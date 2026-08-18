@@ -22,15 +22,22 @@ field() { echo "$1" | sed -E 's/([0-9]+)x([0-9]+)\+([0-9]+)\+([0-9]+)/\1 \2 \3 \
 # 16pxでは吹き出しの線が潰れてKが読めなくなるので、この大きさだけ
 # 「角丸＋白いK」に簡略化する。Kはアプリの絵から切り出すので書体は変わらない。
 #
-# 白い吹き出しを見つけ、その内側（尻尾を除く上側）でいちばん暗い塊がK
-set -- $(field "$(magick "$work/art.png" -colorspace gray -threshold 80% -format "%@" info:)")
+# 白と絵柄の切り分けは明度ではなく彩度で行う。地の色を変えても壊れないため
+# （透明な角が白と誤判定されないよう、先に彩度の高い色で埋めておく）
+magick "$work/art.png" -background red -alpha remove -alpha off "$work/flat.png"
+
+set -- $(field "$(magick "$work/flat.png" -colorspace HSL -channel G -separate +channel \
+  -threshold 25% -negate -format "%@" info:)")
 bw=$1 bh=$2 bx=$3 by=$4
 inside="$(( bw * 83 / 100 ))x$(( bh * 62 / 100 ))+$(( bx + bw * 9 / 100 ))+$(( by + bh * 9 / 100 ))"
-magick "$work/art.png" -crop "$inside" +repage "$work/inside.png"
-set -- $(field "$(magick "$work/inside.png" -colorspace gray -threshold 60% -negate -format "%@" info:)")
+magick "$work/flat.png" -crop "$inside" +repage "$work/inside.png"
+
+# 吹き出しの内側で色が乗っている塊がK（尻尾は上側だけ見るので入らない）
+set -- $(field "$(magick "$work/inside.png" -colorspace HSL -channel G -separate +channel \
+  -threshold 25% -format "%@" info:)")
 kw=$1 kh=$2 kx=$3 ky=$4
 magick "$work/inside.png" -crop "${kw}x${kh}+${kx}+${ky}" +repage \
-  -colorspace gray -threshold 60% -negate "$work/kmask.png"
+  -colorspace HSL -channel G -separate +channel -threshold 25% "$work/kmask.png"
 
 # 板の色はアイコン自身から取る（塗り足しても色が浮かない）
 size=$(magick "$work/art.png" -format "%w" info:)

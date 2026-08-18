@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  /* SNSのカードは縮小して表示されるので、要素を絞って大きく置く */
+  html, body { margin: 0; }
+  body {
+    width: 1200px; height: 630px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 28px;
+    background: #131311; color: #eceae4;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN",
+      "Noto Sans JP", sans-serif;
+    font-feature-settings: "palt" 1;
+    text-align: center;
+  }
+  img { width: 132px; height: 132px; display: block; border-radius: 30px; }
+  .name { font-size: 60px; font-weight: 700; letter-spacing: 0.06em; line-height: 1; }
+  .tagline { font-size: 34px; line-height: 1.5; color: #c9c6be; max-width: 22em; margin: 0; }
+  .foot {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    font-size: 17px; letter-spacing: 0.14em; color: #7d7b74;
+    display: flex; align-items: center; gap: 14px; margin-top: 10px;
+  }
+  .foot::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: oklch(0.78 0.13 145); }
+</style>
+<img src="icon-512.png" alt="">
+<div class="name">Kioku</div>
+<p class="tagline">{{TAGLINE}}</p>
+<div class="foot">{{FOOT}}</div>
