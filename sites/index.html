@@ -38,7 +38,17 @@
       </div>
     </section>
 
-    <!-- スクリーンショット（ポップアップ翻訳）をここに差し込む -->
+    <figure class="shot shot-popup">
+      <picture>
+        <source srcset="images/popup-dark.png" media="(prefers-color-scheme: dark)">
+        <img src="images/popup-light.png" width="832" height="518"
+             alt="A popup under a Japanese sentence selected in TextEdit, showing the English translation and a replace button">
+      </picture>
+      <figcaption class="shot-caption">
+        Select, click the icon, read the translation. Press 置き換える and the
+        sentence is swapped right where you were typing.
+      </figcaption>
+    </figure>
 
     <section class="loop">
       <p class="label">The loop</p>
@@ -81,6 +91,46 @@
           </p>
         </div>
       </div>
+    </section>
+
+    <section class="screens">
+      <p class="label">The app</p>
+
+      <figure class="shot">
+        <picture>
+          <source srcset="images/history-dark.png" media="(prefers-color-scheme: dark)">
+          <img src="images/history-light.png" width="1520" height="1248" loading="lazy"
+               alt="The translation history list: source and translation, each tagged with direction, app and time">
+        </picture>
+        <figcaption class="shot-caption">
+          <strong>History</strong> — every translation stays, along with the app you
+          were in and when. This is what the weekly report reads.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <picture>
+          <source srcset="images/report-dark.png" media="(prefers-color-scheme: dark)">
+          <img src="images/report-light.png" width="1520" height="1248" loading="lazy"
+               alt="The weekly report: patterns you keep stumbling on, followed by proposed flashcards">
+        </picture>
+        <figcaption class="shot-caption">
+          <strong>Weekly report</strong> — the patterns you keep stumbling on, and a
+          handful of proposed cards. Only the ones you approve enter review.
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <picture>
+          <source srcset="images/review-dark.png" media="(prefers-color-scheme: dark)">
+          <img src="images/review-light.png" width="1520" height="1248" loading="lazy"
+               alt="The review screen: a Japanese prompt with a button to show the English">
+        </picture>
+        <figcaption class="shot-caption">
+          <strong>Review</strong> — spaced repetition, kept short enough to finish in
+          five minutes. The interface is in Japanese; English localisation is planned.
+        </figcaption>
+      </figure>
     </section>
 
     <section class="recall">

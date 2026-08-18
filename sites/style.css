@@ -200,6 +200,32 @@ a { color: inherit; }
   border-radius: 2px;
 }
 
+/* ── 実物の画面: 撮ったままを置く。角の抜きも影もアプリのもの ── */
+.shot { margin: 0; }
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ポップアップは実際に画面へ出る大きさのまま置く。引き伸ばすと嘘になる */
+.shot-popup {
+  max-width: 27rem;
+  margin-bottom: var(--gap);
+}
+
+.shot-caption {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: var(--measure);
+  margin: 0.9rem 0 0;
+}
+
+.screens { padding-bottom: var(--gap); }
+.screens .shot + .shot { margin-top: clamp(2.5rem, 6vw, 4rem); }
+
 /* ── 想起の瞬間: 冒頭の文がもう一度、英語を隠して現れる ── */
 .recall { padding-bottom: var(--gap); }
 

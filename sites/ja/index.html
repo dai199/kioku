@@ -38,7 +38,17 @@
       </div>
     </section>
 
-    <!-- スクリーンショット（ポップアップ翻訳）をここに差し込む -->
+    <figure class="shot shot-popup">
+      <picture>
+        <source srcset="../images/popup-dark.png" media="(prefers-color-scheme: dark)">
+        <img src="../images/popup-light.png" width="832" height="518"
+             alt="テキストエディットで選んだ日本語の下に、英訳と「置き換える」ボタンを出しているポップアップ">
+      </picture>
+      <figcaption class="shot-caption">
+        選ぶと小さなアイコンが出て、クリックすると訳が出ます。
+        「置き換える」を押せば、書いていたその場所の文が入れ替わります。
+      </figcaption>
+    </figure>
 
     <section class="loop">
       <p class="label">The loop</p>
@@ -81,6 +91,44 @@
           </p>
         </div>
       </div>
+    </section>
+
+    <section class="screens">
+      <p class="label">画面</p>
+
+      <figure class="shot">
+        <picture>
+          <source srcset="../images/history-dark.png" media="(prefers-color-scheme: dark)">
+          <img src="../images/history-light.png" width="1520" height="1248" loading="lazy"
+               alt="翻訳履歴の一覧。原文と訳文に、方向・アプリ名・調べた時刻が添えられている">
+        </picture>
+        <figcaption class="shot-caption">
+          <strong>翻訳履歴</strong>——いつ、どのアプリで調べたかごと残ります。ここが学習素材になります。
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <picture>
+          <source srcset="../images/report-dark.png" media="(prefers-color-scheme: dark)">
+          <img src="../images/report-light.png" width="1520" height="1248" loading="lazy"
+               alt="週次レポート。今週のつまずきパターンと、覚えるカードの候補が並んでいる">
+        </picture>
+        <figcaption class="shot-caption">
+          <strong>週次レポート</strong>——繰り返しつまずいているパターンを指摘し、カード候補を出します。
+          承認したものだけが復習に入ります。
+        </figcaption>
+      </figure>
+
+      <figure class="shot">
+        <picture>
+          <source srcset="../images/review-dark.png" media="(prefers-color-scheme: dark)">
+          <img src="../images/review-light.png" width="1520" height="1248" loading="lazy"
+               alt="復習画面。日本語の問いが出ていて、答えを表示するボタンがある">
+        </picture>
+        <figcaption class="shot-caption">
+          <strong>復習</strong>——間隔反復で出題します。1回が5分を超えないようにしてあります。
+        </figcaption>
+      </figure>
     </section>
 
     <section class="recall">
