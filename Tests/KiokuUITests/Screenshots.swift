@@ -78,7 +78,25 @@ final class Screenshots: XCTestCase {
         // 表示とレイアウトが落ち着くのを待つ。DB監視の反映が1フレーム遅れることがある
         Thread.sleep(forTimeInterval: 1.5)
 
+        collapseSidebar(in: window)
+
         try write(window.screenshot().pngRepresentation, as: screen.fileName)
+    }
+
+    /// 3枚とも同じサイドバーが写るので畳んでから撮る。
+    /// 表示幅を変えずに中身だけ大きくできる（同じものが3回出ても意味がない）。
+    /// 開閉はアプリが前回の状態を復元するので、畳まれるまで押す
+    private func collapseSidebar(in window: XCUIElement) {
+        let toggle = window.buttons
+            .matching(NSPredicate(format: "label IN {'サイドバー', 'Sidebar'}")).firstMatch
+        guard toggle.waitForExistence(timeout: 5) else { return }
+        for _ in 0..<2 {
+            let sidebar = window.descendants(matching: .any)
+                .matching(NSPredicate(format: "label == 'Sidebar'")).firstMatch
+            guard sidebar.exists, sidebar.frame.width > 40 else { return }
+            toggle.click()
+            Thread.sleep(forTimeInterval: 1.2)
+        }
     }
 
     // MARK: - ポップアップ
