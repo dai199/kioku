@@ -110,7 +110,7 @@ final class Screenshots: XCTestCase {
         // 閉じるときに保存を聞かれず、未保存の無題書類も溜まらない。
         // 日本語を`typeText`で打つと入力ソースの切り替え許可を毎回求められる、という事情もある
         let fixture = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("Kioku 見本.txt")
+            .appendingPathComponent("Kioku.txt")
         try "確認して折り返します。".write(to: fixture, atomically: true, encoding: .utf8)
 
         let kioku = XCUIApplication()
